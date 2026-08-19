@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Classmate Admin Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Quicksand,Poppins,sans-serif;background:linear-gradient(135deg,#fce4ec,#f8bbd0,#f48fb1);min-height:100vh;padding:15px;color:#2c1a29}
+.wrap{width:100%;max-width:520px;margin:auto}
+.header{background:#fffafcdd;padding:18px;border-radius:20px;text-align:center;margin-bottom:14px;box-shadow:0 8px 25px #0001}
+.header h1{font:700 22px Poppins;margin-bottom:4px;color:#831843}
+.header p{font-size:13px}
+.card{background:#ffffffea;border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 8px 20px #00000012}
+.login input,.form input,.form textarea{width:100%;padding:11px 13px;border:1px solid #cbd5e1;border-radius:10px;margin:6px 0;font:600 13px Quicksand;outline:none}
+.form textarea{min-height:75px;resize:vertical}
+button{border:0;border-radius:10px;padding:10px 13px;font:700 13px Quicksand;cursor:pointer}
+.login-btn,.save{width:100%;background:linear-gradient(45deg,#7c3aed,#db2777);color:white;margin-top:6px}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:12px}
+.tab{background:#e2e8f0;color:#334155}.tab.active{background:#7c3aed;color:white}
+.section{display:none}.section.active{display:block}
+.item{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#f8fafc;border:1px solid #e2e8f0;padding:10px;border-radius:12px;margin-top:8px}
+.item-info{min-width:0}.item-info b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.item-info small{color:#64748b}
+.edit{background:#4f46e5;color:#fff}.delete{background:#ef4444;color:#fff}
+.clear{background:#e2e8f0;color:#334155}.logout{background:#334155;color:white;width:100%;margin-top:10px}
+.hidden{display:none!important}
+.status{font-size:12px;margin-top:8px;text-align:center;color:#059669;font-weight:700}
+.note{font-size:11px;color:#64748b;margin-top:8px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="header">
+<h1>🔐 Classmate Admin Panel</h1>
+<p>Praveen Kumar Painkra</p>
+</div>
+
+<div id="loginCard" class="card login">
+<h3>Admin Login</h3>
+<input id="password" type="password" placeholder="Admin password">
+<button class="login-btn" onclick="login()">🔓 Login</button>
+<div id="loginMsg" class="status"></div>
+</div>
+
+<div id="panel" class="hidden">
+<div class="card">
+<div class="tabs">
+<button class="tab active" onclick="showTab('students',this)">👨‍🎓 Students</button>
+<button class="tab" onclick="showTab('notices',this)">📢 Notices</button>
+<button class="tab" onclick="showTab('memories',this)">📸 Memories</button>
+</div>
+
+<!-- STUDENTS -->
+<div id="students" class="section active">
+<h3>Student Add / Edit</h3>
+<div class="form">
+<input id="studentId" type="hidden">
+<input id="studentName" placeholder="Student name">
+<input id="studentRole" placeholder="Course / Role (DCA / PGDCA / Teacher)">
+<input id="studentPhoto" placeholder="Photo file name or image URL">
+<input id="studentInsta" placeholder="Instagram profile URL">
+<button class="save" onclick="saveStudent()">💾 Save Student</button>
+<button class="clear" style="width:100%;margin-top:6px" onclick="clearStudent()">Clear</button>
+</div>
+<p class="note">Photo ke liye abhi file name (jaise <b>photo.jpg</b>) ya image URL use kar sakte ho.</p>
+<div id="studentList"></div>
+</div>
+
+<!-- NOTICES -->
+<div id="notices" class="section">
+<h3>📢 Notice Add</h3>
+<div class="form">
+<input id="noticeTitle" placeholder="Notice title">
+<textarea id="noticeText" placeholder="Notice message"></textarea>
+<button class="save" onclick="saveNotice()">📢 Add Notice</button>
+</div>
+<div id="noticeList"></div>
+</div>
+
+<!-- MEMORIES -->
+<div id="memories" class="section">
+<h3>📸 Memory Add</h3>
+<div class="form">
+<input id="memoryTitle" placeholder="Memory title">
+<input id="memoryImage" placeholder="Image file name or image URL">
+<button class="save" onclick="saveMemory()">📸 Add Memory</button>
+</div>
+<div id="memoryList"></div>
+</div>
+
+<button class="logout" onclick="logout()">🔒 Logout</button>
+</div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+const firebaseConfig={
+ databaseURL:"https://dca-attendance-default-rtdb.firebaseio.com/"
+};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.database();
+const ADMIN_PASSWORD="praveen1234";
+
+let students=[],notices=[],memories=[],loggedIn=false;
+
+const defaultStudents=[
+{id:"1",name:"Praveen Kumar Painkra",role:"Main Developer / DCA",photo:"1000079434.jpg",insta:"https://www.instagram.com/praveen__painkra83/"},
+{id:"2",name:"Arushi",role:"Student / DCA",photo:"IMG_20260818_190641.jpg",insta:"https://www.instagram.com/ll__heyyy__aaru__ll/"},
+{id:"3",name:"Nikkuu",role:"Student / DCA",photo:"_NILU_PAIKRA__20260819_125921205.jpg",insta:"https://www.instagram.com/ll_nnikuuu_ll/"},
+{id:"4",name:"Santi Bai",role:"Student / PGDCA",photo:"Mahi_20260818_190026826.jpg",insta:"https://www.instagram.com/unique_mahy/"},
+{id:"5",name:"Anjali (karmjali)",role:"Student / DCA",photo:"night_angel_girl_71_20260818_185944930.jpg",insta:"https://www.instagram.com/night___angel___girl___71/"},
+{id:"6",name:"Nikhil",role:"Student / DCA",photo:"IMG-20260818-WA0005.jpg",insta:"https://www.instagram.com/n_ishan_1/"},
+{id:"7",name:"Khushi Singh",role:"Teacher / Mam",photo:"Screenshot_2026-08-18-20-45-29-33_99c04817c0de5652397fc8b56c3b3817.jpg",insta:"https://www.instagram.com/khushii_pvt.0/"}
+];
+
+function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+
+function login(){
+if(document.getElementById("password").value===ADMIN_PASSWORD){
+loggedIn=true;
+document.getElementById("loginCard").classList.add("hidden");
+document.getElementById("panel").classList.remove("hidden");
+loadData();
+}else document.getElementById("loginMsg").textContent="❌ Galat password!";
+}
+
+function logout(){
+loggedIn=false;
+document.getElementById("panel").classList.add("hidden");
+document.getElementById("loginCard").classList.remove("hidden");
+document.getElementById("password").value="";
+}
+
+function showTab(id,btn){
+document.querySelectorAll(".section").forEach(x=>x.classList.remove("active"));
+document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+document.getElementById(id).classList.add("active");btn.classList.add("active");
+}
+
+function loadData(){
+db.ref("students").on("value",s=>{
+let v=s.val();
+if(!v){students=defaultStudents;db.ref("students").set(defaultStudents)}
+else students=Array.isArray(v)?v:Object.values(v);
+renderStudents();
+});
+db.ref("notices").on("value",s=>{
+let v=s.val();notices=v?Object.entries(v).map(([key,val])=>({...val,_key:key})):[];
+renderNotices();
+});
+db.ref("memories").on("value",s=>{
+let v=s.val();memories=v?Object.entries(v).map(([key,val])=>({...val,_key:key})):[];
+renderMemories();
+});
+}
+
+function saveStudent(){
+let id=document.getElementById("studentId").value||Date.now().toString();
+let obj={
+id:id,
+name:document.getElementById("studentName").value.trim(),
+role:document.getElementById("studentRole").value.trim(),
+photo:document.getElementById("studentPhoto").value.trim(),
+insta:document.getElementById("studentInsta").value.trim()
+};
+if(!obj.name)return alert("Student name daalein!");
+let arr=students.filter(s=>String(s.id)!==String(id));
+arr.push(obj);
+db.ref("students").set(arr).then(()=>{clearStudent();alert("✅ Student save ho gaya!")});
+}
+
+function editStudent(id){
+let s=students.find(x=>String(x.id)===String(id));if(!s)return;
+document.getElementById("studentId").value=s.id;
+document.getElementById("studentName").value=s.name||"";
+document.getElementById("studentRole").value=s.role||"";
+document.getElementById("studentPhoto").value=s.photo||"";
+document.getElementById("studentInsta").value=s.insta||"";
+window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function deleteStudent(id){
+if(!confirm("Student delete karna hai?"))return;
+db.ref("students").set(students.filter(s=>String(s.id)!==String(id)));
+}
+
+function clearStudent(){
+["studentId","studentName","studentRole","studentPhoto","studentInsta"].forEach(id=>document.getElementById(id).value="");
+}
+
+function saveNotice(){
+let title=document.getElementById("noticeTitle").value.trim();
+let text=document.getElementById("noticeText").value.trim();
+if(!title||!text)return alert("Notice complete bharein!");
+db.ref("notices").push({title,text,createdAt:Date.now()}).then(()=>{
+document.getElementById("noticeTitle").value="";
+document.getElementById("noticeText").value="";
+alert("✅ Notice add ho gaya!");
+});
+}
+
+function deleteNotice(key){
+if(confirm("Notice delete karein?"))db.ref("notices/"+key).remove();
+}
+
+function saveMemory(){
+let title=document.getElementById("memoryTitle").value.trim();
+let image=document.getElementById("memoryImage").value.trim();
+if(!image)return alert("Image file name ya URL daalein!");
+db.ref("memories").push({title:title||"Class Memory",image,createdAt:Date.now()}).then(()=>{
+document.getElementById("memoryTitle").value="";
+document.getElementById("memoryImage").value="";
+alert("✅ Memory add ho gayi!");
+});
+}
+
+function deleteMemory(key){
+if(confirm("Memory delete karein?"))db.ref("memories/"+key).remove();
+}
+
+function renderStudents(){
+document.getElementById("studentList").innerHTML=students.map(s=>
+`<div class="item">
+<div class="item-info"><b>${esc(s.name)}</b><small>${esc(s.role)}</small></div>
+<div><button class="edit" onclick="editStudent('${esc(s.id)}')">✏️</button>
+<button class="delete" onclick="deleteStudent('${esc(s.id)}')">🗑️</button></div>
+</div>`).join("");
+}
+
+function renderNotices(){
+document.getElementById("noticeList").innerHTML=notices.map(n=>
+`<div class="item"><div class="item-info"><b>${esc(n.title)}</b><small>${esc(n.text)}</small></div>
+<button class="delete" onclick="deleteNotice('${esc(n._key)}')">🗑️</button></div>`).join("");
+}
+
+function renderMemories(){
+document.getElementById("memoryList").innerHTML=memories.map(m=>
+`<div class="item"><div class="item-info"><b>${esc(m.title)}</b><small>${esc(m.image)}</small></div>
+<button class="delete" onclick="deleteMemory('${esc(m._key)}')">🗑️</button></div>`).join("");
+}
+</script>
+</body>
+</html>

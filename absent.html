@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DCA Class Smart Attendance</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+            display: flex;
+            justify-content: center;
+            padding: 12px;
+            min-height: 100vh;
+        }
+        .container {
+            background: #ffffff;
+            padding: 15px;
+            border-radius: 16px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            width: 100%;
+            max-width: 420px;
+        }
+        h2 {
+            text-align: center;
+            color: #1e293b;
+            font-size: 1.3rem;
+            margin-bottom: 2px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #64748b;
+            font-size: 0.8rem;
+            margin-bottom: 12px;
+        }
+        .date-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 8px 12px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .date-box label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #475569;
+        }
+        input[type="date"] {
+            padding: 5px 8px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            font-size: 0.85rem;
+            outline: none;
+            color: #334155;
+        }
+        .action-btns {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .action-btns button {
+            flex: 1;
+            padding: 9px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.78rem;
+            color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        #admin-toggle-btn { background: #334155; }
+        #history-btn { background: #4f46e5; }
+        
+        .auto-absent-container {
+            margin-bottom: 12px;
+            display: none;
+        }
+        .auto-absent-btn {
+            width: 100%;
+            background: #d97706;
+            color: white;
+            border: none;
+            padding: 8px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        .student-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-left: 4px solid #4f46e5;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .student-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            overflow: hidden;
+        }
+        
+        .avatar-box {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #f1f5f9;
+            border: 2px solid #cbd5e1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+        .avatar-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .student-info {
+            overflow: hidden;
+        }
+        .student-name {
+            font-weight: bold;
+            font-size: 0.95rem;
+            color: #1e293b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .role-badge {
+            display: inline-block;
+            font-size: 0.7rem;
+            color: #64748b;
+            background: #f1f5f9;
+            padding: 1px 6px;
+            border-radius: 4px;
+            margin-top: 2px;
+        }
+        
+        .student-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .status-badge {
+            font-size: 0.72rem;
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 6px;
+        }
+
+        .p-btn { background: #10b981; color: white; padding: 5px 10px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; font-size: 0.75rem; }
+        .a-btn { background: #ef4444; color: white; padding: 5px 10px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; font-size: 0.75rem; }
+        .self-btn { 
+            background: #4f46e5; 
+            color: white; 
+            padding: 6px 12px; 
+            border-radius: 8px; 
+            border: none; 
+            cursor: pointer; 
+            font-size: 0.75rem; 
+            font-weight: bold;
+        }
+        .disabled-text { font-size: 0.72rem; color: #94a3b8; font-style: italic; font-weight: bold; }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(2px);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 10px;
+        }
+        .modal-content {
+            background: white;
+            padding: 15px;
+            border-radius: 14px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            text-align: center;
+        }
+        .modal-header {
+            font-size: 1.05rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+        .modal-input {
+            width: 100%;
+            padding: 9px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+            outline: none;
+        }
+        .modal-btns {
+            display: flex;
+            gap: 8px;
+        }
+        .modal-btns button {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .btn-confirm { background: #4f46e5; color: white; }
+        .btn-cancel { background: #f1f5f9; color: #475569; }
+
+        .excel-table-container {
+            width: 100%;
+            overflow-x: auto;
+            max-height: 60vh;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            position: relative;
+        }
+        .excel-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.78rem;
+            text-align: center;
+            background: #ffffff;
+        }
+        .excel-table th, .excel-table td {
+            border: 1px solid #cbd5e1;
+            padding: 8px 10px;
+            white-space: nowrap;
+        }
+        .excel-table th {
+            background: #f1f5f9;
+            color: #1e293b;
+            position: sticky;
+            top: 0;
+            z-index: 3;
+        }
+        .excel-table th:first-child, 
+        .excel-table td:first-child {
+            position: sticky;
+            left: 0;
+            background: #f8fafc;
+            z-index: 4;
+            text-align: left;
+            min-width: 130px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+        }
+        .excel-table th:first-child { z-index: 5; background: #e2e8f0; }
+
+        .status-p { color: #10b981; font-weight: bold; }
+        .status-a { color: #ef4444; font-weight: bold; }
+        .status-n { color: #d97706; }
+
+        .close-btn {
+            background: #334155;
+            color: white;
+            width: 100%;
+            padding: 8px;
+            border: none;
+            border-radius: 8px;
+            margin-top: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>📋 DCA Attendance</h2>
+    <div class="subtitle">By Praveen Kumar Painkra</div>
+
+    <div class="date-box">
+        <label for="attendance-date">Tareekh:</label>
+        <input type="date" id="attendance-date" onchange="onDateChange()">
+    </div>
+
+    <div class="action-btns">
+        <button onclick="handleAdminClick()" id="admin-toggle-btn">🔒 Admin Login</button>
+        <button onclick="showExcelReport()" id="history-btn">📊 Excel View</button>
+    </div>
+
+    <div class="auto-absent-container" id="autoAbsentDiv">
+        <button onclick="markUnmarkedAsAbsent()" class="auto-absent-btn">⚠️ Sabhi 'Not Marked' ko Absent karein</button>
+    </div>
+
+    <div id="attendance-list">Firebase connect ho raha hai...</div>
+</div>
+
+<!-- Admin Password Modal -->
+<div class="modal" id="passwordModal">
+    <div class="modal-content">
+        <div class="modal-header">🔐 Admin Login</div>
+        <input type="password" id="adminPasswordInput" class="modal-input" placeholder="Password daalein...">
+        <div class="modal-btns">
+            <button class="btn-cancel" onclick="closePasswordModal()">Radd</button>
+            <button class="btn-confirm" onclick="verifyPassword()">Login</button>
+        </div>
+    </div>
+</div>
+
+<!-- Excel View Modal -->
+<div class="modal" id="reportModal">
+    <div class="modal-content" style="max-width: 95vw;">
+        <div class="modal-header">📊 Excel Sheet Report</div>
+        <div class="excel-table-container" id="excelTableBody"></div>
+        <button class="close-btn" onclick="closeModal()">Band Karein</button>
+    </div>
+</div>
+
+<!-- Firebase Modular SDK -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const firebaseConfig = {
+        databaseURL: "https://dca-attendance-default-rtdb.firebaseio.com/"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const initialFallbackStudents = [
+        { id: 1, name: "Praveen Kumar Painkra", role: "Main Developer / Admin", photo: "1000079434.jpg" },
+        { id: 2, name: "Arushi", role: "Student", photo: "IMG_20260818_190641.jpg" },
+        { id: 3, name: "Mahi", role: "Student", photo: "Mahi_20260818_190026826.jpg" },
+        { id: 4, name: "Anjali", role: "Student", photo: "night_angel_girl_71_20260818_185944930.jpg" },
+        { id: 5, name: "Nikhil", role: "Student", photo: "IMG-20260818-WA0005.jpg" },
+        { id: 6, name: "Khushi Singh", role: "Teacher", photo: "Screenshot_2026-08-18-20-45-29-33_99c04817c0de5652397fc8b56c3b3817.jpg" },
+        { id: 7, name: "Nikkuu", role: "Student", photo: "_NILU_PAIKRA__20260819_125921205.jpg" }
+    ];
+
+    let isAdmin = false;
+    let currentRecords = [];
+    let firebaseAttendanceStore = {};
+
+    function getTodayYYYYMMDD() {
+        let today = new Date();
+        let dd = String(today.getDate()).padStart(2, '0');
+        let mm = String(today.getMonth() + 1).padStart(2, '0');
+        let yyyy = today.getFullYear();
+        return `${yyyy}-${mm}-${dd}`;
+    }
+
+    function getSelectedDateKey() {
+        let dateVal = document.getElementById("attendance-date").value;
+        if(!dateVal) return "";
+        let parts = dateVal.split("-");
+        return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+
+    const attendanceRef = ref(db, 'attendance');
+    onValue(attendanceRef, (snapshot) => {
+        const data = snapshot.val();
+        firebaseAttendanceStore = data || {};
+        loadAttendanceData();
+    });
+
+    window.onDateChange = function() {
+        loadAttendanceData();
+    };
+
+    function loadAttendanceData() {
+        let dateKey = getSelectedDateKey();
+        if(!dateKey) return;
+
+        let rawData = firebaseAttendanceStore[dateKey];
+        
+        if (!rawData) {
+            let allDates = Object.keys(firebaseAttendanceStore);
+            let templateList = initialFallbackStudents;
+
+            if (allDates.length > 0) {
+                let latestDate = allDates[allDates.length - 1];
+                let latestData = firebaseAttendanceStore[latestDate];
+                templateList = Array.isArray(latestData) ? latestData : Object.values(latestData);
+            }
+
+            currentRecords = templateList.map(s => {
+                let fallbackObj = initialFallbackStudents.find(fb => fb.id === s.id);
+                return {
+                    id: s.id,
+                    name: s.name,
+                    role: s.role || "Student",
+                    photo: s.photo || (fallbackObj ? fallbackObj.photo : ""),
+                    status: "Not Marked"
+                };
+            });
+            
+            saveFirebaseStore(dateKey, currentRecords);
+        } else {
+            currentRecords = Array.isArray(rawData) ? rawData : Object.values(rawData);
+        }
+        renderList();
+    }
+
+    function saveFirebaseStore(dateKey, records) {
+        set(ref(db, 'attendance/' + dateKey), records);
+    }
+
+    window.handleAdminClick = function() {
+        if (!isAdmin) {
+            document.getElementById("adminPasswordInput").value = "";
+            document.getElementById("passwordModal").style.display = "flex";
+            document.getElementById("adminPasswordInput").focus();
+        } else {
+            isAdmin = false;
+            document.getElementById("admin-toggle-btn").innerText = "🔒 Admin Login";
+            document.getElementById("autoAbsentDiv").style.display = "none";
+            renderList();
+        }
+    };
+
+    window.verifyPassword = function() {
+        let pass = document.getElementById("adminPasswordInput").value;
+        if (pass === "praveen1234") {
+            isAdmin = true;
+            document.getElementById("admin-toggle-btn").innerText = "🔓 Logout";
+            document.getElementById("autoAbsentDiv").style.display = "block";
+            closePasswordModal();
+            renderList();
+        } else {
+            alert("Galat Password!");
+        }
+    };
+
+    window.closePasswordModal = function() {
+        document.getElementById("passwordModal").style.display = "none";
+    };
+
+    window.markUnmarkedAsAbsent = function() {
+        let dateKey = getSelectedDateKey();
+        let updated = false;
+        let recordsToSave = currentRecords.map(student => {
+            if (student.status === "Not Marked") {
+                updated = true;
+                return { ...student, status: "Absent" };
+            }
+            return student;
+        });
+
+        if (updated) {
+            currentRecords = recordsToSave;
+            saveFirebaseStore(dateKey, recordsToSave);
+        } else {
+            alert("Sabhi ki attendance pehle se marked hai!");
+        }
+    };
+
+    function renderList() {
+        const container = document.getElementById("attendance-list");
+        container.innerHTML = "";
+
+        let selectedDateVal = document.getElementById("attendance-date").value;
+        let todayStr = getTodayYYYYMMDD();
+        let isToday = (selectedDateVal === todayStr);
+
+        if (currentRecords.length === 0) {
+            container.innerHTML = "<p style='text-align:center; padding:20px; color:#64748b;'>Koi student records nahi mile.</p>";
+            return;
+        }
+
+        currentRecords.forEach((student) => {
+            let statusBg = "#fef3c7";
+            let statusColor = "#d97706";
+            if (student.status === "Present") {
+                statusBg = "#d1fae5";
+                statusColor = "#059669";
+            }
+            if (student.status === "Absent") {
+                statusBg = "#fee2e2";
+                statusColor = "#dc2626";
+            }
+            
+            let actionHTML = "";
+
+            if (isAdmin) {
+                actionHTML = `
+                    <div style="display:flex; gap:4px;">
+                        <button onclick="changeStatus(${student.id}, 'Present')" class="p-btn">P</button>
+                        <button onclick="changeStatus(${student.id}, 'Absent')" class="a-btn">A</button>
+                    </div>
+                `;
+            } else {
+                if (isToday) {
+                    if (student.status === "Not Marked") {
+                        actionHTML = `<button onclick="markSelf(${student.id})" class="self-btn">Present ❤️</button>`;
+                    } else {
+                        actionHTML = `<span class="disabled-text">🔒 Closed</span>`;
+                    }
+                } else {
+                    actionHTML = `<span class="disabled-text">🔒 Closed</span>`;
+                }
+            }
+
+            let fallbackObj = initialFallbackStudents.find(s => s.id === student.id);
+            let photoSrc = student.photo || (fallbackObj ? fallbackObj.photo : "https://via.placeholder.com/150?text=User");
+
+            let html = `
+                <div class="student-card">
+                    <div class="student-left">
+                        <div class="avatar-box">
+                            <img src="${photoSrc}" alt="${student.name}" onerror="this.src='https://via.placeholder.com/150?text=User'">
+                        </div>
+                        <div class="student-info">
+                            <div class="student-name">${student.name}</div>
+                            <span class="role-badge">${student.role || 'Student'}</span>
+                        </div>
+                    </div>
+                    <div class="student-right">
+                        <span class="status-badge" style="background: ${statusBg}; color: ${statusColor};">
+                            ${student.status}
+                        </span>
+                        <div>${actionHTML}</div>
+                    </div>
+                </div>
+            `;
+            container.innerHTML += html;
+        });
+    }
+
+    window.markSelf = function(id) {
+        window.changeStatus(id, "Present");
+    };
+
+    window.changeStatus = function(id, newStatus) {
+        let dateKey = getSelectedDateKey();
+        
+        // Directly pull latest status from state
+        let studentIndex = currentRecords.findIndex(s => s.id === id);
+        if(studentIndex === -1) return;
+
+        let currentStudentStatus = currentRecords[studentIndex].status;
+
+        // Strict Check: Non-admin users are completely blocked if status is NOT "Not Marked"
+        if (!isAdmin) {
+            if (currentStudentStatus !== "Not Marked") {
+                alert("🔒 Attendance already marked! Ab ise sirf Admin change kar sakta hai.");
+                return; // Stop execution, do not update Firebase
+            }
+        }
+
+        let fallbackObj = initialFallbackStudents.find(fb => fb.id === id);
+        currentRecords[studentIndex].photo = currentRecords[studentIndex].photo || (fallbackObj ? fallbackObj.photo : "");
+        
+        currentRecords[studentIndex].status = newStatus;
+        saveFirebaseStore(dateKey, currentRecords);
+    };
+
+    window.showExcelReport = function() {
+        let allData = firebaseAttendanceStore;
+        let allDates = Object.keys(allData);
+
+        allDates.sort((a, b) => {
+            let partsA = a.split("-");
+            let partsB = b.split("-");
+            return new Date(partsA[2], partsA[1]-1, partsA[0]) - new Date(partsB[2], partsB[1]-1, partsB[0]);
+        });
+
+        let tableContainer = document.getElementById("excelTableBody");
+        
+        if (allDates.length === 0) {
+            tableContainer.innerHTML = "<p style='padding: 20px; color: #666;'>Koi data nahi hai!</p>";
+            document.getElementById("reportModal").style.display = "flex";
+            return;
+        }
+
+        let studentMap = new Map();
+        allDates.forEach(date => {
+            let dayData = allData[date];
+            let list = Array.isArray(dayData) ? dayData : Object.values(dayData);
+            list.forEach(st => {
+                if (!studentMap.has(st.id)) {
+                    studentMap.set(st.id, st.name);
+                }
+            });
+        });
+
+        let tableHTML = `
+            <table class="excel-table">
+                <thead>
+                    <tr>
+                        <th>Student Name</th>
+        `;
+        
+        allDates.forEach(date => {
+            tableHTML += `<th>${date}</th>`;
+        });
+        tableHTML += `<th>Total P</th><th>Total A</th></tr></thead><tbody>`;
+
+        studentMap.forEach((stName, stId) => {
+            let tPresent = 0;
+            let tAbsent = 0;
+            
+            tableHTML += `<tr><td><b>${stName}</b></td>`;
+
+            allDates.forEach(date => {
+                let dayData = allData[date];
+                let statusText = "-";
+                let statusClass = "status-n";
+
+                if (dayData) {
+                    let list = Array.isArray(dayData) ? dayData : Object.values(dayData);
+                    let found = list.find(s => s.id === stId);
+                    if (found) {
+                        if (found.status === "Present") {
+                            statusText = "P";
+                            statusClass = "status-p";
+                            tPresent++;
+                        } else if (found.status === "Absent") {
+                            statusText = "A";
+                            statusClass = "status-a";
+                            tAbsent++;
+                        }
+                    }
+                }
+                tableHTML += `<td class="${statusClass}">${statusText}</td>`;
+            });
+
+            tableHTML += `<td><b>${tPresent}</b></td><td><b>${tAbsent}</b></td></tr>`;
+        });
+
+        tableHTML += `</tbody></table>`;
+        tableContainer.innerHTML = tableHTML;
+        document.getElementById("reportModal").style.display = "flex";
+    };
+
+    window.closeModal = function() {
+        document.getElementById("reportModal").style.display = "none";
+    };
+
+    let todayStr = getTodayYYYYMMDD();
+    document.getElementById("attendance-date").value = todayStr;
+</script>
+
+</body>
+</html>
