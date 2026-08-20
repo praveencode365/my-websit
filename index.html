@@ -717,28 +717,149 @@
             border-radius: 14px;
         }
 
+        /* MOBILE SIDEBAR + RESPONSIVE FIX */
+        .sidebar-overlay {
+            display: none;
+        }
+
         @media (max-width: 850px) {
+
+            body {
+                display: block;
+            }
+
+            .app-layout {
+                display: block;
+            }
+
             .sidebar {
-                transform: translateX(-100%);
+                width: 280px;
+                max-width: 82vw;
+                transform: translateX(-110%);
+                transition: transform 0.3s ease;
+                box-shadow: none;
+                z-index: 2000;
             }
 
             .sidebar.mobile-open {
                 transform: translateX(0);
+                box-shadow: 10px 0 30px rgba(0,0,0,0.45);
+            }
+
+            .sidebar-overlay {
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.55);
+                backdrop-filter: blur(2px);
+                z-index: 1500;
+            }
+
+            .sidebar-overlay.active {
+                display: block;
             }
 
             .main-content {
+                width: 100%;
                 margin-left: 0;
                 padding: 16px;
             }
 
             .mobile-header {
                 display: flex;
+                width: 100%;
+                min-height: 72px;
             }
 
             .dashboard-grid,
             .stats-cards-wrapper,
             .form-row {
                 grid-template-columns: 1fr;
+            }
+
+            .profile-strip {
+                padding: 14px;
+                gap: 10px;
+            }
+
+            .user-main-info {
+                gap: 10px;
+                min-width: 0;
+            }
+
+            .user-details {
+                min-width: 0;
+            }
+
+            .user-details h3,
+            .user-details p {
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .btn-id-view {
+                flex-shrink: 0;
+            }
+
+            .gallery-container {
+                min-height: 220px;
+            }
+
+            .chart-container {
+                max-width: 100%;
+                height: 250px;
+            }
+        }
+
+        @media (max-width: 480px) {
+
+            .main-content {
+                padding: 12px;
+            }
+
+            .mobile-header {
+                padding: 12px 14px;
+            }
+
+            .mobile-header span {
+                font-size: 20px;
+            }
+
+            .notice-ticker {
+                padding: 10px;
+            }
+
+            .notice-left {
+                min-width: 0;
+            }
+
+            .stat-card {
+                padding: 14px;
+            }
+
+            .avatar-box img {
+                width: 46px;
+                height: 46px;
+            }
+
+            .user-details h3 {
+                font-size: 14px;
+            }
+
+            .user-details p {
+                font-size: 11px;
+            }
+
+            .tag-pill {
+                font-size: 9px;
+            }
+
+            .gallery-container {
+                min-height: 200px;
+            }
+
+            .gallery-btn {
+                width: 36px;
+                height: 36px;
             }
         }
 
@@ -802,6 +923,9 @@
 </head>
 
 <body>
+
+    <!-- MOBILE SIDEBAR OVERLAY -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileSidebar()"></div>
 
     <div id="pageLoader">
         <div class="spinner"></div>
@@ -897,9 +1021,12 @@
             <div class="mobile-header">
 
                 <div>
-                    <i class="fa-solid fa-bars"
-                       onclick="toggleMobileSidebar()"
-                       style="cursor:pointer;"></i>
+                    <button id="mobileMenuBtn"
+                            onclick="toggleMobileSidebar()"
+                            aria-label="Open menu"
+                            style="background:none;border:none;color:var(--text-main);font-size:24px;cursor:pointer;padding:4px;">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
 
                     <span>DCA Portal</span>
                 </div>
@@ -1608,12 +1735,60 @@
         /* MOBILE SIDEBAR */
         function toggleMobileSidebar() {
 
-            document
-                .getElementById('sidebarNav')
-                .classList
-                .toggle('mobile-open');
+            const sidebar = document.getElementById('sidebarNav');
+            const overlay = document.getElementById('sidebarOverlay');
+            const menuBtn = document.getElementById('mobileMenuBtn');
+            const isOpen = sidebar.classList.contains('mobile-open');
+
+            if (isOpen) {
+                closeMobileSidebar();
+            } else {
+                sidebar.classList.add('mobile-open');
+                overlay.classList.add('active');
+
+                if (menuBtn) {
+                    menuBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+                    menuBtn.setAttribute('aria-label', 'Close menu');
+                }
+
+                document.body.style.overflow = 'hidden';
+            }
 
         }
+
+        function closeMobileSidebar() {
+
+            const sidebar = document.getElementById('sidebarNav');
+            const overlay = document.getElementById('sidebarOverlay');
+            const menuBtn = document.getElementById('mobileMenuBtn');
+
+            sidebar.classList.remove('mobile-open');
+            overlay.classList.remove('active');
+
+            if (menuBtn) {
+                menuBtn.innerHTML = '<i class="fa-solid fa-bars"></i>';
+                menuBtn.setAttribute('aria-label', 'Open menu');
+            }
+
+            document.body.style.overflow = '';
+
+        }
+
+        // Close mobile sidebar when a navigation item is selected
+        document.querySelectorAll('.sidebar a, .submenu-item').forEach(item => {
+            item.addEventListener('click', () => {
+                if (window.innerWidth <= 850) {
+                    setTimeout(closeMobileSidebar, 150);
+                }
+            });
+        });
+
+        // Reset mobile menu state when switching back to desktop
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 850) {
+                closeMobileSidebar();
+            }
+        });
 
 
         /* DISMISS NOTICE */
