@@ -217,6 +217,8 @@
             margin-bottom: 12px;
             font-size: 0.9rem;
             outline: none;
+            text-align: center;
+            letter-spacing: 2px;
         }
         .modal-btns {
             display: flex;
@@ -327,6 +329,18 @@
     </div>
 </div>
 
+<!-- Student PIN Modal -->
+<div class="modal" id="pinModal">
+    <div class="modal-content">
+        <div class="modal-header" id="pinModalTitle">🔑 Enter Security PIN</div>
+        <input type="password" id="studentPinInput" class="modal-input" placeholder="4-digit PIN daalein" maxlength="4" inputmode="numeric">
+        <div class="modal-btns">
+            <button class="btn-cancel" onclick="closePinModal()">Radd</button>
+            <button class="btn-confirm" onclick="verifyStudentPin()">Confirm Present</button>
+        </div>
+    </div>
+</div>
+
 <!-- Excel View Modal -->
 <div class="modal" id="reportModal">
     <div class="modal-content" style="max-width: 95vw;">
@@ -348,19 +362,21 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
+    // Har student ke paas ek alag unique 4-digit PIN hai
     const initialFallbackStudents = [
-        { id: 1, name: "Praveen Kumar Painkra", role: "Main Developer / Admin", photo: "1000079434.jpg" },
-        { id: 2, name: "Arushi", role: "Student", photo: "IMG_20260818_190641.jpg" },
-        { id: 3, name: "Mahi", role: "Student", photo: "Mahi_20260818_190026826.jpg" },
-        { id: 4, name: "Anjali", role: "Student", photo: "night_angel_girl_71_20260818_185944930.jpg" },
-        { id: 5, name: "Nikhil", role: "Student", photo: "IMG-20260818-WA0005.jpg" },
-        { id: 6, name: "Khushi Singh", role: "Teacher", photo: "Screenshot_2026-08-18-20-45-29-33_99c04817c0de5652397fc8b56c3b3817.jpg" },
-        { id: 7, name: "Nikkuu", role: "Student", photo: "nilu.jpg" }
+        { id: 1, name: "Praveen Kumar Painkra", role: "Main Developer / Admin", photo: "1000079434.jpg", pin: "8513" },
+        { id: 2, name: "Arushi", role: "Student", photo: "IMG_20260818_190641.jpg", pin: "2341" },
+        { id: 3, name: "Mahi", role: "Student", photo: "Mahi_20260818_190026826.jpg", pin: "0115" },
+        { id: 4, name: "Anjali", role: "Student", photo: "night_angel_girl_71_20260818_185944930.jpg", pin: "4444" },
+        { id: 5, name: "Nikhil", role: "Student", photo: "IMG-20260818-WA0005.jpg", pin: "0001" },
+        { id: 6, name: "Khushi Singh", role: "Teacher", photo: "Screenshot_2026-08-18-20-45-29-33_99c04817c0de5652397fc8b56c3b3817.jpg", pin: "6666" },
+        { id: 7, name: "Nikkuu", role: "Student", photo: "nilu.jpg", pin: "9999" }
     ];
 
     let isAdmin = false;
     let currentRecords = [];
     let firebaseAttendanceStore = {};
+    let selectedStudentForPin = null;
 
     function getTodayYYYYMMDD() {
         let today = new Date();
@@ -411,6 +427,7 @@
                     name: s.name,
                     role: s.role || "Student",
                     photo: s.photo || (fallbackObj ? fallbackObj.photo : ""),
+                    pin: s.pin || (fallbackObj ? fallbackObj.pin : "0000"),
                     status: "Not Marked"
                 };
             });
@@ -512,7 +529,7 @@
             } else {
                 if (isToday) {
                     if (student.status === "Not Marked") {
-                        actionHTML = `<button onclick="markSelf(${student.id})" class="self-btn">Present ❤️</button>`;
+                        actionHTML = `<button onclick="openPinModal(${student.id})" class="self-btn">Present ❤️</button>`;
                     } else {
                         actionHTML = `<span class="disabled-text">🔒 Closed</span>`;
                     }
@@ -547,29 +564,57 @@
         });
     }
 
-    window.markSelf = function(id) {
-        window.changeStatus(id, "Present");
+    // PIN Prompt logic
+    window.openPinModal = function(id) {
+        let student = currentRecords.find(s => s.id === id);
+        if(!student) return;
+
+        selectedStudentForPin = student;
+        document.getElementById("pinModalTitle").innerText = `🔑 PIN for ${student.name}`;
+        document.getElementById("studentPinInput").value = "";
+        document.getElementById("pinModal").style.display = "flex";
+        document.getElementById("studentPinInput").focus();
+    };
+
+    window.closePinModal = function() {
+        selectedStudentForPin = null;
+        document.getElementById("pinModal").style.display = "none";
+    };
+
+    window.verifyStudentPin = function() {
+        if (!selectedStudentForPin) return;
+
+        let enteredPin = document.getElementById("studentPinInput").value;
+        let fallbackObj = initialFallbackStudents.find(s => s.id === selectedStudentForPin.id);
+        let correctPin = selectedStudentForPin.pin || (fallbackObj ? fallbackObj.pin : "");
+
+        if (enteredPin === correctPin) {
+            let studentId = selectedStudentForPin.id;
+            closePinModal();
+            window.changeStatus(studentId, "Present");
+        } else {
+            alert("❌ Galat PIN! Kripya apna sahi PIN daalein.");
+        }
     };
 
     window.changeStatus = function(id, newStatus) {
         let dateKey = getSelectedDateKey();
         
-        // Directly pull latest status from state
         let studentIndex = currentRecords.findIndex(s => s.id === id);
         if(studentIndex === -1) return;
 
         let currentStudentStatus = currentRecords[studentIndex].status;
 
-        // Strict Check: Non-admin users are completely blocked if status is NOT "Not Marked"
         if (!isAdmin) {
             if (currentStudentStatus !== "Not Marked") {
-                alert("🔒 Attendance already marked! Ab ise sirf Admin change kar sakta hai.");
-                return; // Stop execution, do not update Firebase
+                alert("🔒 Attendance pehle se marked hai! Ab ise sirf Admin change kar sakta hai.");
+                return;
             }
         }
 
         let fallbackObj = initialFallbackStudents.find(fb => fb.id === id);
         currentRecords[studentIndex].photo = currentRecords[studentIndex].photo || (fallbackObj ? fallbackObj.photo : "");
+        currentRecords[studentIndex].pin = currentRecords[studentIndex].pin || (fallbackObj ? fallbackObj.pin : "0000");
         
         currentRecords[studentIndex].status = newStatus;
         saveFirebaseStore(dateKey, currentRecords);
