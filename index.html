@@ -1,2155 +1,1916 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DCA Professional Directory & Portal</title>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-
-    <style>
-        :root {
-            --bg-body: #090d16;
-            --bg-card: rgba(22, 29, 45, 0.7);
-            --bg-sidebar: #0e1526;
-            --border: rgba(255, 255, 255, 0.08);
-            --text-main: #f8fafc;
-            --text-sub: #94a3b8;
-            --accent-blue: #2563eb;
-            --accent-cyan: #06b6d4;
-            --accent-green: #10b981;
-            --accent-purple: #8b5cf6;
-        }
-
-        body.light-mode {
-            --bg-body: #f1f5f9;
-            --bg-card: #ffffff;
-            --bg-sidebar: #ffffff;
-            --border: rgba(0, 0, 0, 0.08);
-            --text-main: #0f172a;
-            --text-sub: #64748b;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            transition: background 0.25s, border 0.25s, color 0.25s, transform 0.2s ease;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            min-height: 100vh;
-            display: flex;
-            overflow-x: hidden;
-        }
-
-        /* Page Loader */
-        #pageLoader {
-            position: fixed;
-            inset: 0;
-            background: var(--bg-body);
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .spinner {
-            width: 48px;
-            height: 48px;
-            border: 4px solid rgba(6, 182, 212, 0.2);
-            border-top-color: var(--accent-cyan);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        /* Layout */
-        .app-layout {
-            display: flex;
-            width: 100%;
-            min-height: 100vh;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            width: 260px;
-            background: var(--bg-sidebar);
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            position: fixed;
-            top: 0;
-            bottom: 0;
-            left: 0;
-            z-index: 100;
-            padding: 20px 14px;
-            gap: 20px;
-            overflow-y: auto;
-        }
-
-        .sidebar-brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 0 8px;
-        }
-
-        .sidebar-brand i {
-            font-size: 24px;
-            color: var(--accent-cyan);
-        }
-
-        .sidebar-brand h2 {
-            font-size: 16px;
-            font-weight: 700;
-        }
-
-        .nav-section {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .nav-title {
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: var(--text-sub);
-            padding: 0 10px;
-            margin-bottom: 4px;
-            letter-spacing: 0.8px;
-        }
-
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 12px;
-            color: var(--text-sub);
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: 500;
-            border-radius: 10px;
-            cursor: pointer;
-        }
-
-        .nav-item:hover,
-        .nav-item.active {
-            background: rgba(6, 182, 212, 0.1);
-            color: var(--accent-cyan);
-        }
-
-        .submenu-toggle {
-            justify-content: space-between;
-        }
-
-        .submenu-list {
-            display: none;
-            flex-direction: column;
-            gap: 4px;
-            padding-left: 28px;
-        }
-
-        .submenu-list.open {
-            display: flex;
-        }
-
-        .submenu-item {
-            padding: 8px 10px;
-            font-size: 12px;
-            color: var(--text-sub);
-            cursor: pointer;
-            border-radius: 8px;
-        }
-
-        .submenu-item:hover {
-            color: var(--text-main);
-            background: rgba(255,255,255,0.04);
-        }
-
-        /* Main */
-        .main-content {
-            margin-left: 260px;
-            flex: 1;
-            padding: 24px 30px 60px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            max-width: 1100px;
-        }
-
-        .mobile-header {
-            display: none;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--bg-card);
-            padding: 12px 16px;
-            border-radius: 12px;
-            border: 1px solid var(--border);
-        }
-
-        /* Notice */
-        .notice-ticker {
-            background: rgba(37, 99, 235, 0.12);
-            border: 1px solid rgba(37, 99, 235, 0.3);
-            border-radius: 12px;
-            padding: 10px 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            font-size: 13px;
-        }
-
-        .notice-left {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .notice-badge {
-            background: var(--accent-blue);
-            color: #fff;
-            font-size: 10px;
-            font-weight: 700;
-            padding: 3px 8px;
-            border-radius: 6px;
-        }
-
-        .dismiss-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-sub);
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        /* Dashboard */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 2fr 1.2fr;
-            gap: 16px;
-        }
-
-        .stats-cards-wrapper {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-        }
-
-        .stat-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 16px;
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-2px);
-        }
-
-        .stat-icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 10px;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid var(--border);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: var(--accent-cyan);
-        }
-
-        .stat-info h2 {
-            font-size: 20px;
-        }
-
-        .stat-info p {
-            font-size: 11px;
-            color: var(--text-sub);
-        }
-
-        .chart-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 16px;
-        }
-
-        .chart-container {
-            width: 100%;
-            max-width: 200px;
-            height: 180px;
-            margin: auto;
-        }
-
-        /* Search */
-        .utility-bar {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .search-container {
-            flex: 1;
-            position: relative;
-            min-width: 240px;
-        }
-
-        .search-container i.search-icon {
-            position: absolute;
-            left: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-sub);
-        }
-
-        .search-container input {
-            width: 100%;
-            padding: 12px 38px 12px 42px;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            color: var(--text-main);
-            outline: none;
-        }
-
-        .clear-search-btn {
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: transparent;
-            border: none;
-            color: var(--text-sub);
-            cursor: pointer;
-            display: none;
-        }
-
-        .cta-attendance-btn {
-            background: linear-gradient(135deg, #2563eb, #06b6d4);
-            color: #fff;
-            padding: 12px 22px;
-            border-radius: 12px;
-            font-size: 13px;
-            font-weight: 700;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* Directory */
-        .section-header {
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            color: var(--text-sub);
-            margin-top: 6px;
-        }
-
-        .directory-feed {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .profile-strip {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 16px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            cursor: pointer;
-        }
-
-        .profile-strip:hover {
-            transform: translateY(-3px);
-            border-color: rgba(6, 182, 212, 0.4);
-        }
-
-        .user-main-info {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .avatar-box {
-            position: relative;
-        }
-
-        .avatar-box img {
-            width: 52px;
-            height: 52px;
-            border-radius: 14px;
-            object-fit: cover;
-            border: 1px solid var(--border);
-        }
-
-        .status-dot {
-            position: absolute;
-            bottom: -2px;
-            right: -2px;
-            width: 12px;
-            height: 12px;
-            background: var(--accent-green);
-            border: 2px solid var(--bg-card);
-            border-radius: 50%;
-        }
-
-        .user-details h3 {
-            font-size: 15px;
-        }
-
-        .user-details p {
-            font-size: 12px;
-            color: var(--text-sub);
-            margin-top: 3px;
-        }
-
-        .user-tags {
-            display: flex;
-            gap: 6px;
-            margin-top: 6px;
-        }
-
-        .tag-pill {
-            font-size: 10px;
-            padding: 2px 8px;
-            border-radius: 6px;
-            background: rgba(255,255,255,0.05);
-            color: var(--text-sub);
-            border: 1px solid var(--border);
-        }
-
-        .status-badge {
-            font-size: 11px;
-            padding: 3px 8px;
-            border-radius: 6px;
-        }
-
-        .badge-admin {
-            background: rgba(37, 99, 235, 0.15);
-            color: #60a5fa;
-        }
-
-        .badge-special {
-            background: rgba(236, 72, 153, 0.15);
-            color: #f472b6;
-        }
-
-        .badge-student {
-            background: rgba(148, 163, 184, 0.12);
-            color: var(--text-sub);
-        }
-
-        .badge-faculty {
-            background: rgba(16, 185, 129, 0.15);
-            color: #34d399;
-        }
-
-        .btn-id-view {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--border);
-            color: var(--text-main);
-            padding: 8px 14px;
-            border-radius: 10px;
-            font-size: 12px;
-        }
-
-        /* Gallery */
-        .gallery-container {
-            position: relative;
-            width: 100%;
-            min-height: 260px;
-            max-height: 500px;
-            border-radius: 18px;
-            overflow: hidden;
-            border: 1px solid var(--border);
-            background: #000;
-            display: flex;
-            align-items: center;
-        }
-
-        .gallery-slider {
-            display: flex;
-            width: 100%;
-            height: 100%;
-            transition: transform 0.6s ease;
-        }
-
-        .slide-item {
-            min-width: 100%;
-            position: relative;
-        }
-
-        .slide-item img {
-            width: 100%;
-            height: auto;
-            max-height: 500px;
-            object-fit: contain;
-            cursor: pointer;
-        }
-
-        .slide-caption {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 24px 18px 14px;
-            background: linear-gradient(transparent, rgba(0,0,0,0.9));
-            color: #fff;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .gallery-btn {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            background: rgba(0,0,0,0.6);
-            color: #fff;
-            border: 1px solid rgba(255,255,255,0.2);
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            cursor: pointer;
-            z-index: 10;
-        }
-
-        .prev-btn {
-            left: 12px;
-        }
-
-        .next-btn {
-            right: 12px;
-        }
-
-        .gallery-dots {
-            position: absolute;
-            bottom: 14px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 6px;
-        }
-
-        .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.4);
-            cursor: pointer;
-        }
-
-        .dot.active {
-            width: 22px;
-            border-radius: 10px;
-            background: var(--accent-cyan);
-        }
-
-        /* Registration */
-        .registration-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 20px;
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 10px;
-        }
-
-        .form-row input {
-            background: rgba(0,0,0,0.2);
-            border: 1px solid var(--border);
-            padding: 12px 14px;
-            border-radius: 10px;
-            color: var(--text-main);
-            width: 100%;
-        }
-
-        .btn-submit-form {
-            width: 100%;
-            margin-top: 14px;
-            background: var(--accent-green);
-            color: #fff;
-            border: none;
-            padding: 12px;
-            border-radius: 10px;
-            cursor: pointer;
-        }
-
-        /* Modal */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.85);
-            backdrop-filter: blur(8px);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .id-card {
-            background: linear-gradient(145deg, #131b2e, #0b101d);
-            border: 1px solid rgba(255,255,255,0.15);
-            width: 100%;
-            max-width: 400px;
-            border-radius: 20px;
-            padding: 24px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            position: relative;
-        }
-
-        .id-header {
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 12px;
-            margin-bottom: 16px;
-        }
-
-        .id-header h4 {
-            font-size: 12px;
-            color: var(--accent-cyan);
-        }
-
-        .id-avatar {
-            width: 90px;
-            height: 90px;
-            border-radius: 20px;
-            object-fit: cover;
-            border: 3px solid var(--accent-blue);
-            margin-bottom: 12px;
-        }
-
-        .id-details h2 {
-            font-size: 18px;
-        }
-
-        .id-details p {
-            font-size: 12px;
-            color: var(--text-sub);
-        }
-
-        .id-meta {
-            width: 100%;
-            background: rgba(255,255,255,0.03);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 12px;
-            margin: 16px 0 12px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            text-align: left;
-        }
-
-        .meta-item label {
-            font-size: 10px;
-            color: var(--text-sub);
-            display: block;
-        }
-
-        .meta-item span {
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .id-insta-btn {
-            width: 100%;
-            background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
-            color: #fff;
-            padding: 10px 16px;
-            border-radius: 10px;
-            text-decoration: none;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .close-modal {
-            position: absolute;
-            top: 14px;
-            right: 16px;
-            background: transparent;
-            border: none;
-            color: var(--text-sub);
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        .lightbox-img {
-            max-width: 95%;
-            max-height: 90vh;
-            border-radius: 14px;
-        }
-
-        /* MOBILE SIDEBAR + RESPONSIVE FIX */
-        .sidebar-overlay {
-            display: none;
-        }
-
-        @media (max-width: 850px) {
-
-            body {
-                display: block;
-            }
-
-            .app-layout {
-                display: block;
-            }
-
-            .sidebar {
-                width: 280px;
-                max-width: 82vw;
-                transform: translateX(-110%);
-                transition: transform 0.3s ease;
-                box-shadow: none;
-                z-index: 2000;
-            }
-
-            .sidebar.mobile-open {
-                transform: translateX(0);
-                box-shadow: 10px 0 30px rgba(0,0,0,0.45);
-            }
-
-            .sidebar-overlay {
-                position: fixed;
-                inset: 0;
-                background: rgba(0,0,0,0.55);
-                backdrop-filter: blur(2px);
-                z-index: 1500;
-            }
-
-            .sidebar-overlay.active {
-                display: block;
-            }
-
-            .main-content {
-                width: 100%;
-                margin-left: 0;
-                padding: 16px;
-            }
-
-            .mobile-header {
-                display: flex;
-                width: 100%;
-                min-height: 72px;
-            }
-
-            .dashboard-grid,
-            .stats-cards-wrapper,
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-
-            .profile-strip {
-                padding: 14px;
-                gap: 10px;
-            }
-
-            .user-main-info {
-                gap: 10px;
-                min-width: 0;
-            }
-
-            .user-details {
-                min-width: 0;
-            }
-
-            .user-details h3,
-            .user-details p {
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-
-            .btn-id-view {
-                flex-shrink: 0;
-            }
-
-            .gallery-container {
-                min-height: 220px;
-            }
-
-            .chart-container {
-                max-width: 100%;
-                height: 250px;
-            }
-        }
-
-        @media (max-width: 480px) {
-
-            .main-content {
-                padding: 12px;
-            }
-
-            .mobile-header {
-                padding: 12px 14px;
-            }
-
-            .mobile-header span {
-                font-size: 20px;
-            }
-
-            .notice-ticker {
-                padding: 10px;
-            }
-
-            .notice-left {
-                min-width: 0;
-            }
-
-            .stat-card {
-                padding: 14px;
-            }
-
-            .avatar-box img {
-                width: 46px;
-                height: 46px;
-            }
-
-            .user-details h3 {
-                font-size: 14px;
-            }
-
-            .user-details p {
-                font-size: 11px;
-            }
-
-            .tag-pill {
-                font-size: 9px;
-            }
-
-            .gallery-container {
-                min-height: 200px;
-            }
-
-            .gallery-btn {
-                width: 36px;
-                height: 36px;
-            }
-        }
-
-        /* PROFESSIONAL DEVELOPER CREDIT */
-        .developer-credit {
-            padding: 18px 10px 5px;
-            text-align: center;
-            margin-top: 4px;
-        }
-
-        .developer-line {
-            width: 100%;
-            height: 1px;
-            background: var(--border);
-            margin-bottom: 15px;
-        }
-
-        .developer-info {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            text-align: left;
-        }
-
-        .developer-icon {
-            width: 34px;
-            height: 34px;
-            min-width: 34px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(6, 182, 212, 0.12);
-            border: 1px solid rgba(6, 182, 212, 0.25);
-            color: var(--accent-cyan);
-            font-size: 14px;
-        }
-
-        .developer-text span {
-            display: block;
-            font-size: 9px;
-            color: var(--text-sub);
-            margin-bottom: 3px;
-        }
-
-        .developer-text strong {
-            display: block;
-            font-size: 11px;
-            font-weight: 700;
-            color: var(--text-main);
-        }
-
-        .developer-credit p {
-            margin-top: 12px;
-            font-size: 9px;
-            color: var(--text-sub);
-        }
-
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>DCA Student Portal</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+rel="stylesheet">
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<style>
+
+/* =========================
+   MOBILE ONLY DESIGN
+========================= */
+
+:root{
+    --bg:#070b14;
+    --card:rgba(18,26,43,.82);
+    --card2:rgba(24,34,56,.72);
+    --text:#f8fafc;
+    --sub:#94a3b8;
+    --border:rgba(255,255,255,.09);
+
+    --blue:#2563eb;
+    --cyan:#06b6d4;
+    --green:#10b981;
+    --purple:#8b5cf6;
+}
+
+body.light-mode{
+    --bg:#eef2f7;
+    --card:rgba(255,255,255,.82);
+    --card2:rgba(248,250,252,.85);
+    --text:#0f172a;
+    --sub:#64748b;
+    --border:rgba(0,0,0,.08);
+}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+body{
+    font-family:Inter,sans-serif;
+    background:
+        radial-gradient(circle at 20% 10%,rgba(37,99,235,.15),transparent 30%),
+        radial-gradient(circle at 90% 40%,rgba(6,182,212,.10),transparent 30%),
+        var(--bg);
+
+    color:var(--text);
+    min-height:100vh;
+
+    padding-bottom:95px;
+
+    overflow-x:hidden;
+}
+
+
+/* =========================
+   LOADER
+========================= */
+
+#pageLoader{
+    position:fixed;
+    inset:0;
+
+    z-index:9999;
+
+    background:var(--bg);
+
+    display:flex;
+    flex-direction:column;
+
+    align-items:center;
+    justify-content:center;
+
+    gap:15px;
+}
+
+.spinner{
+    width:45px;
+    height:45px;
+
+    border-radius:50%;
+
+    border:4px solid rgba(6,182,212,.2);
+    border-top-color:var(--cyan);
+
+    animation:spin .8s linear infinite;
+}
+
+@keyframes spin{
+    to{
+        transform:rotate(360deg);
+    }
+}
+
+
+/* =========================
+   MAIN MOBILE CONTAINER
+========================= */
+
+.main{
+    width:100%;
+    max-width:600px;
+
+    margin:auto;
+
+    padding:14px 14px 30px;
+}
+
+
+/* =========================
+   MOBILE HEADER
+========================= */
+
+.mobile-header{
+    display:flex;
+
+    align-items:center;
+    justify-content:space-between;
+
+    padding:8px 2px 18px;
+}
+
+.mobile-brand{
+    display:flex;
+    align-items:center;
+
+    gap:10px;
+}
+
+.mobile-brand-icon{
+    width:42px;
+    height:42px;
+
+    border-radius:14px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--blue),
+            var(--cyan)
+        );
+
+    color:white;
+
+    box-shadow:
+        0 8px 25px rgba(37,99,235,.25);
+}
+
+.mobile-brand h2{
+    font-size:16px;
+}
+
+.mobile-brand p{
+    font-size:9px;
+
+    color:var(--sub);
+
+    margin-top:3px;
+}
+
+.mobile-theme{
+    width:42px;
+    height:42px;
+
+    border-radius:14px;
+
+    border:1px solid var(--border);
+
+    background:var(--card);
+
+    backdrop-filter:blur(15px);
+    -webkit-backdrop-filter:blur(15px);
+
+    color:var(--text);
+
+    cursor:pointer;
+}
+
+
+/* =========================
+   HERO
+========================= */
+
+.hero{
+    background:
+        linear-gradient(
+            135deg,
+            rgba(37,99,235,.22),
+            rgba(6,182,212,.08)
+        );
+
+    border:1px solid var(--border);
+
+    padding:21px;
+
+    border-radius:22px;
+
+    margin-bottom:16px;
+
+    box-shadow:
+        0 15px 40px rgba(0,0,0,.12);
+}
+
+.hero h1{
+    font-size:21px;
+
+    line-height:1.3;
+
+    margin-bottom:9px;
+}
+
+.hero p{
+    font-size:12px;
+
+    color:var(--sub);
+
+    line-height:1.7;
+}
+
+
+/* =========================
+   ATTENDANCE
+========================= */
+
+.attendance-box{
+    margin-bottom:17px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #2563eb,
+            #06b6d4
+        );
+
+    border-radius:20px;
+
+    padding:16px;
+
+    display:flex;
+
+    justify-content:space-between;
+    align-items:center;
+
+    color:white;
+
+    box-shadow:
+        0 12px 30px rgba(37,99,235,.22);
+}
+
+.attendance-left{
+    display:flex;
+
+    gap:12px;
+
+    align-items:center;
+}
+
+.attendance-icon{
+    width:43px;
+    height:43px;
+
+    flex-shrink:0;
+
+    background:rgba(255,255,255,.18);
+
+    border-radius:14px;
+
+    display:flex;
+
+    align-items:center;
+    justify-content:center;
+
+    font-size:17px;
+}
+
+.attendance-box h2{
+    font-size:14px;
+}
+
+.attendance-box p{
+    margin-top:4px;
+
+    font-size:9px;
+
+    opacity:.85;
+}
+
+.attendance-btn{
+    background:white;
+
+    color:#2563eb;
+
+    padding:10px 12px;
+
+    border-radius:11px;
+
+    text-decoration:none;
+
+    font-size:10px;
+
+    font-weight:700;
+
+    white-space:nowrap;
+}
+
+
+/* =========================
+   SEARCH
+========================= */
+
+.search-box{
+    position:relative;
+
+    margin-bottom:22px;
+}
+
+.search-box i{
+    position:absolute;
+
+    left:16px;
+    top:50%;
+
+    transform:translateY(-50%);
+
+    color:var(--sub);
+
+    font-size:13px;
+}
+
+.search-box input{
+    width:100%;
+
+    padding:14px 15px 14px 43px;
+
+    background:var(--card);
+
+    border:1px solid var(--border);
+
+    border-radius:15px;
+
+    color:var(--text);
+
+    outline:none;
+
+    font-family:inherit;
+
+    font-size:12px;
+
+    backdrop-filter:blur(15px);
+    -webkit-backdrop-filter:blur(15px);
+}
+
+.search-box input::placeholder{
+    color:var(--sub);
+}
+
+
+/* =========================
+   SECTION
+========================= */
+
+.section-title{
+    font-size:14px;
+
+    font-weight:800;
+
+    margin:24px 2px 13px;
+}
+
+
+/* =========================
+   DIRECTORY
+========================= */
+
+.directory{
+    display:flex;
+
+    flex-direction:column;
+
+    gap:10px;
+}
+
+.member-card{
+    background:var(--card);
+
+    border:1px solid var(--border);
+
+    border-radius:18px;
+
+    padding:12px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    gap:8px;
+
+    backdrop-filter:blur(15px);
+    -webkit-backdrop-filter:blur(15px);
+
+    transition:.2s;
+}
+
+.member-card:active{
+    transform:scale(.985);
+}
+
+.member-info{
+    display:flex;
+
+    align-items:center;
+
+    gap:11px;
+
+    min-width:0;
+}
+
+.member-info img{
+    width:52px;
+    height:52px;
+
+    flex-shrink:0;
+
+    border-radius:15px;
+
+    object-fit:cover;
+
+    border:1px solid var(--border);
+}
+
+.member-text{
+    min-width:0;
+}
+
+.member-text h3{
+    font-size:13px;
+
+    white-space:nowrap;
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+}
+
+.member-text p{
+    font-size:10px;
+
+    color:var(--sub);
+
+    margin-top:4px;
+}
+
+.member-tags{
+    display:flex;
+
+    gap:4px;
+
+    margin-top:6px;
+
+    flex-wrap:wrap;
+}
+
+.tag{
+    font-size:8px;
+
+    background:rgba(6,182,212,.10);
+
+    color:var(--cyan);
+
+    padding:3px 6px;
+
+    border-radius:6px;
+}
+
+.profile-btn{
+    border:none;
+
+    background:rgba(37,99,235,.15);
+
+    color:#60a5fa;
+
+    padding:8px 10px;
+
+    border-radius:10px;
+
+    cursor:pointer;
+
+    font-size:10px;
+
+    font-weight:600;
+
+    white-space:nowrap;
+}
+
+
+/* =========================
+   GALLERY
+========================= */
+
+.gallery{
+    position:relative;
+
+    overflow:hidden;
+
+    border-radius:20px;
+
+    border:1px solid var(--border);
+
+    background:#000;
+
+    box-shadow:
+        0 15px 35px rgba(0,0,0,.15);
+}
+
+.gallery-slider{
+    display:flex;
+
+    transition:transform .5s ease;
+}
+
+.slide{
+    min-width:100%;
+}
+
+.slide img{
+    width:100%;
+
+    height:280px;
+
+    object-fit:cover;
+
+    display:block;
+}
+
+.gallery-controls{
+    position:absolute;
+
+    top:50%;
+    left:0;
+    right:0;
+
+    transform:translateY(-50%);
+
+    display:flex;
+
+    justify-content:space-between;
+
+    padding:0 9px;
+
+    pointer-events:none;
+}
+
+.gallery-controls button{
+    pointer-events:auto;
+
+    width:36px;
+    height:36px;
+
+    border-radius:50%;
+
+    border:1px solid rgba(255,255,255,.15);
+
+    background:rgba(0,0,0,.55);
+
+    backdrop-filter:blur(10px);
+
+    color:white;
+
+    cursor:pointer;
+}
+
+
+/* =========================
+   ABOUT
+========================= */
+
+.about-card{
+    background:var(--card);
+
+    border:1px solid var(--border);
+
+    border-radius:20px;
+
+    padding:20px;
+
+    line-height:1.7;
+
+    color:var(--sub);
+
+    font-size:11px;
+
+    backdrop-filter:blur(15px);
+    -webkit-backdrop-filter:blur(15px);
+}
+
+.about-card h2{
+    color:var(--text);
+
+    font-size:16px;
+
+    margin-bottom:9px;
+}
+
+
+/* =========================
+   GLASS BOTTOM TASKBAR
+========================= */
+
+.bottom-nav{
+
+    position:fixed;
+
+    display:flex;
+
+    bottom:10px;
+
+    left:10px;
+    right:10px;
+
+    height:68px;
+
+    z-index:200;
+
+    justify-content:space-around;
+
+    align-items:center;
+
+    padding:5px 4px;
+
+    border-radius:22px;
+
+    /* GLASS EFFECT */
+
+    background:
+        rgba(15,23,42,.60);
+
+    border:
+        1px solid rgba(255,255,255,.13);
+
+    box-shadow:
+        0 15px 45px rgba(0,0,0,.35),
+        inset 0 1px 0 rgba(255,255,255,.08);
+
+    backdrop-filter:
+        blur(22px)
+        saturate(160%);
+
+    -webkit-backdrop-filter:
+        blur(22px)
+        saturate(160%);
+}
+
+
+/* LIGHT MODE GLASS */
+
+body.light-mode .bottom-nav{
+    background:
+        rgba(255,255,255,.65);
+
+    border:
+        1px solid rgba(255,255,255,.75);
+
+    box-shadow:
+        0 15px 40px rgba(15,23,42,.15),
+        inset 0 1px 0 rgba(255,255,255,.8);
+}
+
+
+/* NAV ITEMS */
+
+.bottom-nav a,
+.bottom-nav button{
+
+    flex:1;
+
+    height:100%;
+
+    border:none;
+
+    background:transparent;
+
+    color:var(--sub);
+
+    text-decoration:none;
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:center;
+
+    justify-content:center;
+
+    gap:4px;
+
+    font-size:8px;
+
+    font-family:inherit;
+
+    cursor:pointer;
+
+    position:relative;
+
+    transition:.2s;
+}
+
+.bottom-nav i{
+    font-size:16px;
+
+    transition:.2s;
+}
+
+
+/* ACTIVE / HOVER */
+
+.bottom-nav a:active,
+.bottom-nav button:active{
+    transform:scale(.90);
+}
+
+
+/* ATTENDANCE FLOATING BUTTON */
+
+.bottom-nav .attendance-mobile{
+
+    color:white;
+
+    margin-top:-25px;
+
+    height:56px;
+
+    max-width:56px;
+
+    flex:none;
+
+    border-radius:18px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #2563eb,
+            #06b6d4
+        );
+
+    border:
+        4px solid var(--bg);
+
+    box-shadow:
+        0 8px 25px rgba(37,99,235,.45);
+
+    font-size:7px;
+}
+
+.bottom-nav .attendance-mobile i{
+    font-size:18px;
+}
+
+
+/* =========================
+   MODAL
+========================= */
+
+.modal{
+    display:none;
+
+    position:fixed;
+
+    inset:0;
+
+    z-index:500;
+
+    background:rgba(0,0,0,.75);
+
+    padding:15px;
+
+    align-items:center;
+
+    justify-content:center;
+
+    backdrop-filter:blur(6px);
+}
+
+.modal-card{
+    width:100%;
+
+    max-width:380px;
+
+    background:var(--card);
+
+    border:1px solid var(--border);
+
+    border-radius:24px;
+
+    padding:23px;
+
+    text-align:center;
+
+    position:relative;
+
+    backdrop-filter:blur(25px);
+
+    -webkit-backdrop-filter:blur(25px);
+
+    box-shadow:
+        0 25px 70px rgba(0,0,0,.4);
+}
+
+.close-modal{
+    position:absolute;
+
+    right:14px;
+    top:14px;
+
+    width:32px;
+    height:32px;
+
+    border:none;
+
+    border-radius:10px;
+
+    background:rgba(255,255,255,.06);
+
+    color:var(--sub);
+
+    font-size:16px;
+
+    cursor:pointer;
+}
+
+.modal-card img{
+    width:90px;
+    height:90px;
+
+    object-fit:cover;
+
+    border-radius:24px;
+
+    margin-bottom:11px;
+}
+
+.modal-card h2{
+    font-size:18px;
+}
+
+.modal-card p{
+    font-size:11px;
+
+    color:var(--sub);
+
+    margin-top:6px;
+}
+
+.modal-details{
+    margin-top:18px;
+
+    padding:14px;
+
+    background:var(--card2);
+
+    border-radius:15px;
+
+    text-align:left;
+}
+
+.modal-details div{
+    font-size:11px;
+
+    margin:8px 0;
+
+    color:var(--sub);
+}
+
+.modal-details strong{
+    color:var(--text);
+}
+
+.instagram-btn{
+    display:block;
+
+    margin-top:14px;
+
+    padding:12px;
+
+    border-radius:12px;
+
+    background:
+        linear-gradient(
+            45deg,
+            #f09433,
+            #dc2743,
+            #bc1888
+        );
+
+    color:white;
+
+    text-decoration:none;
+
+    font-size:11px;
+
+    font-weight:700;
+}
+
+
+/* =========================
+   SMALL PHONES
+========================= */
+
+@media(max-width:360px){
+
+    .main{
+        padding:12px 11px 25px;
+    }
+
+    .hero h1{
+        font-size:19px;
+    }
+
+    .member-info img{
+        width:48px;
+        height:48px;
+    }
+
+    .profile-btn{
+        padding:7px 8px;
+        font-size:9px;
+    }
+
+    .bottom-nav{
+        left:7px;
+        right:7px;
+        bottom:7px;
+    }
+
+}
+
+
+/* =========================
+   FORCE MOBILE LOOK
+========================= */
+
+@media(min-width:769px){
+
+    body{
+        width:430px;
+
+        margin:auto;
+
+        border-left:1px solid var(--border);
+        border-right:1px solid var(--border);
+
+        box-shadow:
+            0 0 50px rgba(0,0,0,.25);
+    }
+
+    .main{
+        width:100%;
+    }
+
+    .bottom-nav{
+        width:410px;
+
+        left:50%;
+
+        right:auto;
+
+        transform:translateX(-50%);
+    }
+
+}
+
+</style>
 </head>
+
 
 <body>
 
-    <!-- MOBILE SIDEBAR OVERLAY -->
-    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileSidebar()"></div>
 
-    <div id="pageLoader">
-        <div class="spinner"></div>
-        <p style="font-size:13px;color:var(--text-sub);">
-            Loading DCA Portal...
-        </p>
-    </div>
+<!-- LOADER -->
 
-    <div class="app-layout">
+<div id="pageLoader">
 
-        <aside class="sidebar" id="sidebarNav">
+    <div class="spinner"></div>
 
-            <div class="sidebar-brand">
-                <i class="fa-solid fa-graduation-cap"></i>
-                <div>
-                    <h2>DCA Portal</h2>
-                    <p style="font-size:11px;color:var(--text-sub);">
-                        Academic Network
-                    </p>
-                </div>
-            </div>
+    <p style="font-size:12px;color:#94a3b8;">
+        Loading DCA Portal...
+    </p>
 
-            <div class="nav-section">
+</div>
 
-                <span class="nav-title">Navigation</span>
 
-                <a href="#homeSection" class="nav-item active">
-                    <i class="fa-solid fa-house"></i>
-                    Home Dashboard
-                </a>
+<!-- MAIN -->
 
-                <div class="nav-item submenu-toggle" onclick="toggleSubmenu()">
-                    <span>
-                        <i class="fa-solid fa-address-book"></i>
-                        Members Directory
-                    </span>
-                    <i class="fa-solid fa-chevron-down"></i>
-                </div>
+<main class="main">
 
-                <div class="submenu-list" id="directorySubmenu">
-                    <span class="submenu-item" onclick="filterCategory('all')">All Members</span>
-                    <span class="submenu-item" onclick="filterCategory('dca')">DCA Batch</span>
-                    <span class="submenu-item" onclick="filterCategory('pgdca')">PGDCA Batch</span>
-                    <span class="submenu-item" onclick="filterCategory('bca')">BCA Batch</span>
-                    <span class="submenu-item" onclick="filterCategory('faculty')">Faculty</span>
-                </div>
 
-                <a href="absent.html" target="_blank" class="nav-item">
-                    <i class="fa-solid fa-clipboard-user"></i>
-                    Attendance System
-                </a>
+<!-- MOBILE HEADER -->
 
-                <a href="#gallerySection" class="nav-item">
-                    <i class="fa-solid fa-images"></i>
-                    Campus Gallery
-                </a>
+<div class="mobile-header">
 
-            </div>
+    <div class="mobile-brand">
 
-            <div class="nav-section" style="margin-top:auto;">
+        <div class="mobile-brand-icon">
+            <i class="fa-solid fa-graduation-cap"></i>
+        </div>
 
-                <button class="nav-item"
-                        style="width:100%;border:none;background:transparent;"
-                        id="themeBtn">
-                    <i class="fa-solid fa-sun"></i>
-                    Toggle Theme
-                </button>
+        <div>
 
-            </div>
+            <h2>DCA Portal</h2>
 
-            <!-- PROFESSIONAL DEVELOPER CREDIT -->
-            <div class="developer-credit">
-                <div class="developer-line"></div>
-
-                <div class="developer-info">
-                    <div class="developer-icon">
-                        <i class="fa-solid fa-code"></i>
-                    </div>
-
-                    <div class="developer-text">
-                        <span>Designed &amp; Developed by</span>
-                        <strong>Praveen Kumar Painkra</strong>
-                    </div>
-                </div>
-
-                <p>© 2026 DCA Portal. All Rights Reserved.</p>
-            </div>
-
-        </aside>
-
-        <main class="main-content">
-
-            <div class="mobile-header">
-
-                <div>
-                    <button id="mobileMenuBtn"
-                            onclick="toggleMobileSidebar()"
-                            aria-label="Open menu"
-                            style="background:none;border:none;color:var(--text-main);font-size:24px;cursor:pointer;padding:4px;">
-                        <i class="fa-solid fa-bars"></i>
-                    </button>
-
-                    <span>DCA Portal</span>
-                </div>
-
-                <button id="mobileThemeBtn"
-                        style="background:none;border:none;color:var(--text-main);">
-                    <i class="fa-solid fa-sun"></i>
-                </button>
-
-            </div>
-
-            <div class="notice-ticker" id="noticeTicker">
-
-                <div class="notice-left">
-                    <span class="notice-badge">
-                        <i class="fa-solid fa-bullhorn"></i>
-                        Notice
-                    </span>
-
-                    Welcome to Official Batch Directory!
-                </div>
-
-                <button class="dismiss-btn" onclick="dismissNotice()">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-
-            </div>
-
-            <div class="dashboard-grid" id="homeSection">
-
-                <div class="stats-cards-wrapper">
-
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fa-solid fa-users"></i>
-                        </div>
-
-                        <div class="stat-info">
-                            <h2>7</h2>
-                            <p>Members</p>
-                        </div>
-                    </div>
-
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fa-solid fa-book-bookmark"></i>
-                        </div>
-
-                        <div class="stat-info">
-                            <h2>3</h2>
-                            <p>Batches</p>
-                        </div>
-                    </div>
-
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fa-solid fa-user-tie"></i>
-                        </div>
-
-                        <div class="stat-info">
-                            <h2>1</h2>
-                            <p>Faculty</p>
-                        </div>
-                    </div>
-
-                </div>
-
-                <div class="chart-card">
-
-                    <p style="font-size:12px;color:var(--text-sub);margin-bottom:8px;">
-                        BATCH DISTRIBUTION
-                    </p>
-
-                    <div class="chart-container">
-                        <canvas id="batchChart"></canvas>
-                    </div>
-
-                </div>
-
-            </div>
-
-            <div class="utility-bar">
-
-                <div class="search-container">
-
-                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
-
-                    <input type="text"
-                           id="searchInput"
-                           oninput="handleSearch()"
-                           placeholder="Search members...">
-
-                    <button class="clear-search-btn"
-                            id="clearSearchBtn"
-                            onclick="clearSearch()">
-                        <i class="fa-solid fa-circle-xmark"></i>
-                    </button>
-
-                </div>
-
-                <a href="absent.html"
-                   target="_blank"
-                   class="cta-attendance-btn"
-                   onclick="triggerConfetti(event)">
-
-                    <i class="fa-solid fa-file-signature"></i>
-                    Attendance Register
-
-                </a>
-
-            </div>
-
-            <div class="section-header">
-                Member Directory
-            </div>
-
-            <div class="directory-feed" id="directoryFeed">
-
-                <!-- PRAVEEN -->
-                <div class="profile-strip"
-                     data-category="dca"
-                     onclick="openIDCard(
-                     'Praveen Kumar',
-                     'Lead Developer & Admin',
-                     'DCA Batch',
-                     '1000079434.jpg',
-                     'DCA-2026-01',
-                     'Bagicha, CG',
-                     'praveen@example.com',
-                     'Web & App Developer',
-                     'https://www.instagram.com/praveen__painkra83/?__pwa=1#'
-                     )">
-
-                    <div class="user-main-info">
-
-                        <div class="avatar-box">
-                            <img src="1000079434.jpg" alt="Praveen Kumar">
-                            <div class="status-dot"></div>
-                        </div>
-
-                        <div class="user-details">
-
-                            <h3>
-                                Praveen Kumar
-                                <span class="status-badge badge-admin">
-                                    Lead / Dev
-                                </span>
-                            </h3>
-
-                            <p>DCA Batch | Computer Applications</p>
-
-                            <div class="user-tags">
-                                <span class="tag-pill">Bagicha</span>
-                                <span class="tag-pill">Full Stack</span>
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    <span class="btn-id-view">
-                        <i class="fa-solid fa-address-card"></i>
-                        Profile
-                    </span>
-
-                </div>
-
-
-                <!-- ARUSHI -->
-                <div class="profile-strip"
-                     data-category="dca"
-                     onclick="openIDCard(
-                     'Arushi...',
-                     'Special Member',
-                     'DCA Batch',
-                     'IMG_20260818_190641.jpg',
-                     'DCA-2026-02',
-                     'Active Student',
-                     'arushi@example.com',
-                     'DCA Student Candidate',
-                     'https://www.instagram.com/ll__heyyy__aaru__ll/?__pwa=1#'
-                     )">
-
-                    <div class="user-main-info">
-
-                        <div class="avatar-box">
-                            <img src="IMG_20260818_190641.jpg" alt="Arushi">
-                        </div>
-
-                        <div class="user-details">
-
-                            <h3>
-                                Arushi...
-                                <span class="status-badge badge-special">
-                                    Special Member
-                                </span>
-                            </h3>
-
-                            <p>DCA Program Candidate</p>
-
-                            <div class="user-tags">
-                                <span class="tag-pill">Batch 2026</span>
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    <span class="btn-id-view">
-                        <i class="fa-solid fa-address-card"></i>
-                        Profile
-                    </span>
-
-                </div>
-
-
-                <!-- NIKKUU -->
-                <div class="profile-strip"
-                     data-category="bca"
-                     onclick="openIDCard(
-                     'Nikkuu',
-                     'BCA Candidate',
-                     'BCA Batch',
-                     'nilu.jpg',
-                     'BCA-2026-03',
-                     'Active Student',
-                     'nikkuu@example.com',
-                     'BCA Undergraduate',
-                     'https://www.instagram.com/ll_nnikuuu_ll/?__pwa=1#'
-                     )">
-
-                    <div class="user-main-info">
-
-                        <div class="avatar-box">
-                            <img src="nilu.jpg" alt="Nikkuu">
-                        </div>
-
-                        <div class="user-details">
-
-                            <h3>
-                                Nikkuu
-                                <span class="status-badge badge-student">
-                                    BCA Candidate
-                                </span>
-                            </h3>
-
-                            <p>Bachelor of Computer Applications</p>
-
-                            <div class="user-tags">
-                                <span class="tag-pill">BCA</span>
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    <span class="btn-id-view">
-                        <i class="fa-solid fa-address-card"></i>
-                        Profile
-                    </span>
-
-                </div>
-
-
-                <!-- MAHI -->
-                <div class="profile-strip"
-                     data-category="pgdca"
-                     onclick="openIDCard(
-                     'Mahi',
-                     'PGDCA Candidate',
-                     'PGDCA Batch',
-                     'Mahi_20260818_190026826.jpg',
-                     'PGDCA-2026-04',
-                     'Active Student',
-                     'mahi@example.com',
-                     'Post Graduate Diploma',
-                     'https://www.instagram.com/unique_mahy/?__pwa=1#'
-                     )">
-
-                    <div class="user-main-info">
-
-                        <div class="avatar-box">
-                            <img src="Mahi_20260818_190026826.jpg" alt="Mahi">
-                        </div>
-
-                        <div class="user-details">
-
-                            <h3>
-                                Mahi
-                                <span class="status-badge badge-student">
-                                    PGDCA Candidate
-                                </span>
-                            </h3>
-
-                            <p>Post Graduate Diploma Student</p>
-
-                            <div class="user-tags">
-                                <span class="tag-pill">PGDCA</span>
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    <span class="btn-id-view">
-                        <i class="fa-solid fa-address-card"></i>
-                        Profile
-                    </span>
-
-                </div>
-
-
-                <!-- ANJALI -->
-                <div class="profile-strip"
-                     data-category="dca"
-                     onclick="openIDCard(
-                     'Anjali',
-                     'DCA Candidate',
-                     'DCA Batch',
-                     'night_angel_girl_71_20260818_185944930.jpg',
-                     'DCA-2026-05',
-                     'Active Student',
-                     'anjali@example.com',
-                     'Diploma Applications',
-                     'https://www.instagram.com/night___angel___girl___71/?__pwa=1#'
-                     )">
-
-                    <div class="user-main-info">
-
-                        <div class="avatar-box">
-                            <img src="night_angel_girl_71_20260818_185944930.jpg"
-                                 alt="Anjali">
-                        </div>
-
-                        <div class="user-details">
-
-                            <h3>
-                                Anjali
-                                <span class="status-badge badge-student">
-                                    DCA Candidate
-                                </span>
-                            </h3>
-
-                            <p>Diploma in Computer Applications</p>
-
-                            <div class="user-tags">
-                                <span class="tag-pill">DCA</span>
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    <span class="btn-id-view">
-                        <i class="fa-solid fa-address-card"></i>
-                        Profile
-                    </span>
-
-                </div>
-
-
-                <!-- NIKHIL -->
-                <div class="profile-strip"
-                     data-category="dca"
-                     onclick="openIDCard(
-                     'Nikhil',
-                     'DCA Candidate',
-                     'DCA Batch',
-                     'IMG-20260818-WA0005.jpg',
-                     'DCA-2026-06',
-                     'Active Student',
-                     'nikhil@example.com',
-                     'DCA Candidate',
-                     'https://www.instagram.com/iam_._nishan_/?__pwa=1#'
-                     )">
-
-                    <div class="user-main-info">
-
-                        <div class="avatar-box">
-                            <img src="IMG-20260818-WA0005.jpg" alt="Nikhil">
-                        </div>
-
-                        <div class="user-details">
-
-                            <h3>
-                                Nikhil
-                                <span class="status-badge badge-student">
-                                    DCA Candidate
-                                </span>
-                            </h3>
-
-                            <p>Diploma in Computer Applications</p>
-
-                            <div class="user-tags">
-                                <span class="tag-pill">DCA</span>
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    <span class="btn-id-view">
-                        <i class="fa-solid fa-address-card"></i>
-                        Profile
-                    </span>
-
-                </div>
-
-
-                <!-- KHUSHI -->
-                <div class="profile-strip"
-                     data-category="faculty"
-                     onclick="openIDCard(
-                     'Khushi Singh',
-                     'Instructor & Technical Trainer',
-                     'Faculty Staff',
-                     'Screenshot_2026-08-18-20-45-29-33_99c04817c0de5652397fc8b56c3b3817.jpg',
-                     'FAC-2026-01',
-                     'Faculty Department',
-                     'khushi@example.com',
-                     'Technical Instructor',
-                     'https://www.instagram.com/khushii_pvt.0/?__pwa=1#'
-                     )">
-
-                    <div class="user-main-info">
-
-                        <div class="avatar-box">
-                            <img src="Screenshot_2026-08-18-20-45-29-33_99c04817c0de5652397fc8b56c3b3817.jpg"
-                                 alt="Khushi Singh">
-                        </div>
-
-                        <div class="user-details">
-
-                            <h3>
-                                Khushi Singh
-                                <span class="status-badge badge-faculty">
-                                    Faculty Staff
-                                </span>
-                            </h3>
-
-                            <p>Instructor & Technical Trainer</p>
-
-                            <div class="user-tags">
-                                <span class="tag-pill">Faculty</span>
-                                <span class="tag-pill">Trainer</span>
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    <span class="btn-id-view">
-                        <i class="fa-solid fa-address-card"></i>
-                        Profile
-                    </span>
-
-                </div>
-
-            </div>
-
-            <div class="section-header" id="gallerySection">
-                Academic Gallery & Campus Media
-            </div>
-
-            <div class="gallery-container">
-
-                <button class="gallery-btn prev-btn" onclick="prevSlide()">
-                    <i class="fa-solid fa-chevron-left"></i>
-                </button>
-
-                <button class="gallery-btn next-btn" onclick="nextSlide()">
-                    <i class="fa-solid fa-chevron-right"></i>
-                </button>
-
-                <div class="gallery-slider" id="gallerySlider">
-
-                    <div class="slide-item">
-                        <img src="1000074207.jpg"
-                             onclick="openLightbox(this.src)">
-                        <div class="slide-caption">
-                            <span>Campus View 1</span>
-                            <i class="fa-solid fa-expand"></i>
-                        </div>
-                    </div>
-
-                    <div class="slide-item">
-                        <img src="1000074193.jpg"
-                             onclick="openLightbox(this.src)">
-                        <div class="slide-caption">
-                            <span>Academic Events</span>
-                            <i class="fa-solid fa-expand"></i>
-                        </div>
-                    </div>
-
-                    <div class="slide-item">
-                        <img src="1000073046.jpg"
-                             onclick="openLightbox(this.src)">
-                        <div class="slide-caption">
-                            <span>Computer Lab Setup</span>
-                            <i class="fa-solid fa-expand"></i>
-                        </div>
-                    </div>
-
-                    <div class="slide-item">
-                        <img src="1000070714.jpg"
-                             onclick="openLightbox(this.src)">
-                        <div class="slide-caption">
-                            <span>Student Activities</span>
-                            <i class="fa-solid fa-expand"></i>
-                        </div>
-                    </div>
-
-                    <div class="slide-item">
-                        <img src="1000076715.jpg"
-                             onclick="openLightbox(this.src)">
-                        <div class="slide-caption">
-                            <span>Batch Memories</span>
-                            <i class="fa-solid fa-expand"></i>
-                        </div>
-                    </div>
-
-                </div>
-
-                <div class="gallery-dots" id="galleryDots"></div>
-
-            </div>
-
-            <div class="section-header">
-                Directory Registration Form
-            </div>
-
-            <form class="registration-card"
-                  onsubmit="sendWhatsAppRegistration(event)">
-
-                <div class="form-row">
-
-                    <input type="text"
-                           id="regName"
-                           placeholder="Full Name"
-                           required>
-
-                    <input type="text"
-                           id="regCourse"
-                           placeholder="Program (e.g., DCA)"
-                           required>
-
-                    <input type="text"
-                           id="regLocation"
-                           placeholder="City / Location"
-                           required>
-
-                </div>
-
-                <button type="submit" class="btn-submit-form">
-                    Submit Profile Entry via WhatsApp
-                </button>
-
-            </form>
-
-        </main>
-
-    </div>
-
-
-    <!-- PROFILE MODAL -->
-    <div id="idCardModal"
-         class="modal-overlay"
-         onclick="closeIDCard()">
-
-        <div class="id-card"
-             onclick="event.stopPropagation()">
-
-            <button class="close-modal"
-                    onclick="closeIDCard()">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-
-            <div class="id-header">
-
-                <h4>
-                    <i class="fa-solid fa-graduation-cap"></i>
-                    Member Profile
-                </h4>
-
-                <i class="fa-solid fa-qrcode"></i>
-
-            </div>
-
-            <img id="modalAvatar"
-                 class="id-avatar"
-                 src=""
-                 alt="Avatar">
-
-            <div class="id-details">
-
-                <h2 id="modalName">Student Name</h2>
-
-                <p id="modalRole">
-                    Role Info
-                </p>
-
-            </div>
-
-            <div class="id-meta">
-
-                <div class="meta-item">
-                    <label>Batch Program</label>
-                    <span id="modalBatch">DCA</span>
-                </div>
-
-                <div class="meta-item">
-                    <label>Member ID</label>
-                    <span id="modalID"></span>
-                </div>
-
-                <div class="meta-item">
-                    <label>Projects/Role</label>
-                    <span id="modalProject"></span>
-                </div>
-
-                <div class="meta-item">
-                    <label>Location</label>
-                    <span id="modalLoc"></span>
-                </div>
-
-            </div>
-
-            <!-- DYNAMIC INSTAGRAM LINK -->
-            <a id="modalInsta"
-               href="#"
-               target="_blank"
-               class="id-insta-btn">
-
-                <i class="fa-brands fa-instagram"></i>
-                View Instagram Profile
-
-            </a>
+            <p>Student Directory</p>
 
         </div>
 
     </div>
 
 
-    <!-- LIGHTBOX -->
-    <div id="lightbox"
-         class="modal-overlay"
-         onclick="closeLightbox()">
+    <button class="mobile-theme"
+            onclick="toggleTheme()">
 
-        <img id="lightboxImg"
-             class="lightbox-img"
-             src=""
-             alt="View">
+        <i class="fa-solid fa-moon"></i>
+
+    </button>
+
+</div>
+
+
+<!-- HOME -->
+
+<section id="home">
+
+    <div class="hero">
+
+        <h1>
+            Welcome to DCA Portal 👋
+        </h1>
+
+        <p>
+            Connect with students, explore member profiles,
+            view campus memories and access attendance easily.
+        </p>
+
+    </div>
+
+</section>
+
+
+<!-- ATTENDANCE -->
+
+<div class="attendance-box">
+
+    <div class="attendance-left">
+
+        <div class="attendance-icon">
+
+            <i class="fa-solid fa-clipboard-check"></i>
+
+        </div>
+
+        <div>
+
+            <h2>
+                Attendance System
+            </h2>
+
+            <p>
+                Open and manage student attendance
+            </p>
+
+        </div>
 
     </div>
 
 
-    <script>
+    <a href="absent.html"
+       target="_blank"
+       class="attendance-btn">
 
-        /* PAGE LOADER */
-        window.addEventListener('load', () => {
+        Open
+        <i class="fa-solid fa-arrow-up-right-from-square"></i>
 
-            const loader = document.getElementById('pageLoader');
+    </a>
 
-            loader.style.opacity = '0';
+</div>
 
-            setTimeout(() => {
-                loader.style.display = 'none';
-            }, 300);
+
+<!-- SEARCH -->
+
+<div class="search-box">
+
+    <i class="fa-solid fa-magnifying-glass"></i>
+
+    <input
+        type="text"
+        id="searchInput"
+        placeholder="Search students..."
+        oninput="searchMembers()">
+
+</div>
+
+
+<!-- DIRECTORY -->
+
+<section id="directory">
+
+<h2 class="section-title">
+    Member Directory
+</h2>
+
+
+<div class="directory"
+     id="memberDirectory">
+
+
+<!-- PRAVEEN -->
+
+<div class="member-card">
+
+    <div class="member-info">
+
+        <img src="1000079434.jpg">
+
+        <div class="member-text">
+
+            <h3>Praveen Kumar</h3>
+
+            <p>
+                Lead Developer & Admin
+            </p>
+
+            <div class="member-tags">
+
+                <span class="tag">
+                    DCA
+                </span>
+
+                <span class="tag">
+                    Developer
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <button class="profile-btn"
+        onclick="openProfile(
+        'Praveen Kumar',
+        'Lead Developer & Admin',
+        'DCA',
+        '1000079434.jpg',
+        'DCA-2026-01',
+        'Ambikapur, CG',
+        'https://www.instagram.com/praveen__painkra83/'
+        )">
+
+        Profile
+
+    </button>
+
+</div>
+
+
+<!-- ARUSHI -->
+
+<div class="member-card">
+
+    <div class="member-info">
+
+        <img src="IMG_20260818_190641.jpg">
+
+        <div class="member-text">
+
+            <h3>Arushi...</h3>
+
+            <p>
+                DCA Student
+            </p>
+
+            <div class="member-tags">
+
+                <span class="tag">
+                    DCA
+                </span>
+
+                <span class="tag">
+                    Batch 2026
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <button class="profile-btn"
+        onclick="openProfile(
+        'Arushi...',
+        'DCA Student',
+        'DCA',
+        'IMG_20260818_190641.jpg',
+        'DCA-2026-02',
+        'Active Student',
+        'https://www.instagram.com/ll__heyyy__aaru__ll/'
+        )">
+
+        Profile
+
+    </button>
+
+</div>
+
+
+<!-- NIKKUU -->
+
+<div class="member-card">
+
+    <div class="member-info">
+
+        <img src="nilu.jpg">
+
+        <div class="member-text">
+
+            <h3>Nikkuu</h3>
+
+            <p>
+                BCA Candidate
+            </p>
+
+            <div class="member-tags">
+
+                <span class="tag">
+                    BCA
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <button class="profile-btn"
+        onclick="openProfile(
+        'Nikkuu',
+        'BCA Candidate',
+        'BCA',
+        'nilu.jpg',
+        'BCA-2026-03',
+        'Active Student',
+        'https://www.instagram.com/ll_nnikuuu_ll/'
+        )">
+
+        Profile
+
+    </button>
+
+</div>
+
+
+<!-- MAHI -->
+
+<div class="member-card">
+
+    <div class="member-info">
+
+        <img src="Mahi_20260818_190026826.jpg">
+
+        <div class="member-text">
+
+            <h3>Mahi</h3>
+
+            <p>
+                PGDCA Student
+            </p>
+
+            <div class="member-tags">
+
+                <span class="tag">
+                    PGDCA
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <button class="profile-btn"
+        onclick="openProfile(
+        'Mahi',
+        'PGDCA Candidate',
+        'PGDCA',
+        'Mahi_20260818_190026826.jpg',
+        'PGDCA-2026-04',
+        'Active Student',
+        'https://www.instagram.com/unique_mahy/'
+        )">
+
+        Profile
+
+    </button>
+
+</div>
+
+
+<!-- ANJALI -->
+
+<div class="member-card">
+
+    <div class="member-info">
+
+        <img src="night_angel_girl_71_20260818_185944930.jpg">
+
+        <div class="member-text">
+
+            <h3>Anjali</h3>
+
+            <p>
+                DCA Candidate
+            </p>
+
+            <div class="member-tags">
+
+                <span class="tag">
+                    DCA
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <button class="profile-btn"
+        onclick="openProfile(
+        'Anjali',
+        'DCA Candidate',
+        'DCA',
+        'night_angel_girl_71_20260818_185944930.jpg',
+        'DCA-2026-05',
+        'Active Student',
+        'https://www.instagram.com/night___angel___girl___71/'
+        )">
+
+        Profile
+
+    </button>
+
+</div>
+
+
+<!-- NIKHIL -->
+
+<div class="member-card">
+
+    <div class="member-info">
+
+        <img src="IMG-20260818-WA0005.jpg">
+
+        <div class="member-text">
+
+            <h3>Nikhil</h3>
+
+            <p>
+                DCA Candidate
+            </p>
+
+            <div class="member-tags">
+
+                <span class="tag">
+                    DCA
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <button class="profile-btn"
+        onclick="openProfile(
+        'Nikhil',
+        'DCA Candidate',
+        'DCA',
+        'IMG-20260818-WA0005.jpg',
+        'DCA-2026-06',
+        'Active Student',
+        'https://www.instagram.com/iam_._nishan_/'
+        )">
+
+        Profile
+
+    </button>
+
+</div>
+
+
+<!-- KHUSHI -->
+
+<div class="member-card">
+
+    <div class="member-info">
+
+        <img src="Screenshot_2026-08-18-20-45-29-33_99c04817c0de5652397fc8b56c3b3817.jpg">
+
+        <div class="member-text">
+
+            <h3>Khushi Singh</h3>
+
+            <p>
+                Technical Trainer
+            </p>
+
+            <div class="member-tags">
+
+                <span class="tag">
+                    Faculty
+                </span>
+
+                <span class="tag">
+                    Trainer
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <button class="profile-btn"
+        onclick="openProfile(
+        'Khushi Singh',
+        'Instructor & Technical Trainer',
+        'Faculty Staff',
+        'Screenshot_2026-08-18-20-45-29-33_99c04817c0de5652397fc8b56c3b3817.jpg',
+        'FAC-2026-01',
+        'Faculty Department',
+        'https://www.instagram.com/khushii_pvt.0/'
+        )">
+
+        Profile
+
+    </button>
+
+</div>
+
+
+</div>
+
+</section>
+
+
+<!-- GALLERY -->
+
+<section id="gallery">
+
+<h2 class="section-title">
+    Campus Gallery
+</h2>
+
+
+<div class="gallery">
+
+    <div class="gallery-slider"
+         id="gallerySlider">
+
+
+        <div class="slide">
+            <img src="1000074207.jpg">
+        </div>
+
+        <div class="slide">
+            <img src="1000074193.jpg">
+        </div>
+
+        <div class="slide">
+            <img src="1000073046.jpg">
+        </div>
+
+        <div class="slide">
+            <img src="1000070714.jpg">
+        </div>
+
+        <div class="slide">
+            <img src="1000076715.jpg">
+        </div>
+
+
+    </div>
+
+
+    <div class="gallery-controls">
+
+        <button onclick="prevSlide()">
+            <i class="fa-solid fa-chevron-left"></i>
+        </button>
+
+        <button onclick="nextSlide()">
+            <i class="fa-solid fa-chevron-right"></i>
+        </button>
+
+    </div>
+
+</div>
+
+</section>
+
+
+<!-- ABOUT -->
+
+<section id="about">
+
+<h2 class="section-title">
+    About Me
+</h2>
+
+
+<div class="about-card">
+
+    <h2>
+        Hi, I'm Praveen Kumar Painkra 👋
+    </h2>
+
+    <p>
+        I am passionate about computers, technology and web development.
+        This DCA Portal is created to connect students and provide an
+        easy place to explore member profiles, attendance and batch memories.
+    </p>
+
+    <br>
+
+    <p>
+
+        <strong style="color:var(--text);">
+            City:
+        </strong>
+
+        Ambikapur
+
+    </p>
+
+</div>
+
+</section>
+
+
+</main>
+
+
+<!-- =========================
+     GLASS MOBILE TASKBAR
+========================= -->
+
+<nav class="bottom-nav">
+
+    <a href="#home">
+
+        <i class="fa-solid fa-house"></i>
+
+        <span>Home</span>
+
+    </a>
+
+
+    <a href="absent.html"
+       target="_blank"
+       class="attendance-mobile">
+
+        <i class="fa-solid fa-clipboard-check"></i>
+
+        <span>Attendance</span>
+
+    </a>
+
+
+    <a href="#directory">
+
+        <i class="fa-solid fa-users"></i>
+
+        <span>Members</span>
+
+    </a>
+
+
+    <a href="#gallery">
+
+        <i class="fa-solid fa-images"></i>
+
+        <span>Gallery</span>
+
+    </a>
+
+
+    <a href="#about">
+
+        <i class="fa-solid fa-user"></i>
+
+        <span>About</span>
+
+    </a>
+
+</nav>
+
+
+<!-- PROFILE MODAL -->
+
+<div class="modal"
+     id="profileModal"
+     onclick="closeProfile(event)">
+
+
+    <div class="modal-card">
+
+
+        <button class="close-modal"
+                onclick="closeProfile()">
+
+            <i class="fa-solid fa-xmark"></i>
+
+        </button>
+
+
+        <img id="profileImage"
+             src="">
+
+
+        <h2 id="profileName">
+            Student Name
+        </h2>
+
+
+        <p id="profileRole">
+            Student Role
+        </p>
+
+
+        <div class="modal-details">
+
+            <div>
+
+                <strong>Course:</strong>
+
+                <span id="profileCourse"></span>
+
+            </div>
+
+
+            <div>
+
+                <strong>Member ID:</strong>
+
+                <span id="profileID"></span>
+
+            </div>
+
+
+            <div>
+
+                <strong>Location:</strong>
+
+                <span id="profileLocation"></span>
+
+            </div>
+
+        </div>
+
+
+        <a id="instagramLink"
+           target="_blank"
+           class="instagram-btn">
+
+            <i class="fa-brands fa-instagram"></i>
+
+            View Instagram Profile
+
+        </a>
+
+
+    </div>
+
+</div>
+
+
+<script>
+
+
+/* =========================
+   LOADER
+========================= */
+
+window.addEventListener("load",function(){
+
+    setTimeout(function(){
+
+        document.getElementById("pageLoader")
+        .style.display="none";
+
+    },500);
+
+});
+
+
+/* =========================
+   THEME
+========================= */
+
+function toggleTheme(){
+
+    document.body.classList.toggle("light-mode");
+
+}
+
+
+/* =========================
+   SEARCH
+========================= */
+
+function searchMembers(){
+
+    const input =
+        document.getElementById("searchInput");
+
+    const value =
+        input.value.toLowerCase();
+
+    const cards =
+        document.querySelectorAll(".member-card");
+
+
+    cards.forEach(function(card){
+
+        const text =
+            card.innerText.toLowerCase();
+
+
+        if(text.includes(value)){
+
+            card.style.display="flex";
+
+        }else{
+
+            card.style.display="none";
+
+        }
+
+    });
+
+}
+
+
+/* =========================
+   PROFILE MODAL
+========================= */
+
+function openProfile(
+    name,
+    role,
+    course,
+    image,
+    id,
+    location,
+    instagram
+){
+
+    document.getElementById("profileName")
+    .innerText=name;
+
+
+    document.getElementById("profileRole")
+    .innerText=role;
+
+
+    document.getElementById("profileCourse")
+    .innerText=course;
+
+
+    document.getElementById("profileImage")
+    .src=image;
+
+
+    document.getElementById("profileID")
+    .innerText=id;
+
+
+    document.getElementById("profileLocation")
+    .innerText=location;
+
+
+    document.getElementById("instagramLink")
+    .href=instagram;
+
+
+    document.getElementById("profileModal")
+    .style.display="flex";
+
+
+    if(typeof confetti==="function"){
+
+        confetti({
+
+            particleCount:30,
+
+            spread:55,
+
+            origin:{
+                y:.6
+            }
 
         });
 
+    }
 
-        /* THEME */
-        const themeBtn = document.getElementById('themeBtn');
-        const mobileThemeBtn = document.getElementById('mobileThemeBtn');
+}
 
-        function toggleTheme() {
 
-            document.body.classList.toggle('light-mode');
+function closeProfile(event){
 
-            const isLight =
-                document.body.classList.contains('light-mode');
+    if(
+        !event ||
+        event.target.id==="profileModal"
+    ){
 
-            themeBtn.innerHTML = isLight
-                ? '<i class="fa-solid fa-moon"></i> Dark Mode'
-                : '<i class="fa-solid fa-sun"></i> Light Mode';
+        document.getElementById("profileModal")
+        .style.display="none";
 
-        }
+    }
 
-        themeBtn.addEventListener('click', toggleTheme);
+}
 
-        if (mobileThemeBtn) {
-            mobileThemeBtn.addEventListener('click', toggleTheme);
-        }
 
+/* =========================
+   GALLERY
+========================= */
 
-        /* SUBMENU */
-        function toggleSubmenu() {
-            document
-                .getElementById('directorySubmenu')
-                .classList
-                .toggle('open');
-        }
+let currentSlide=0;
 
 
-        /* MOBILE SIDEBAR */
-        function toggleMobileSidebar() {
+const slider =
+    document.getElementById("gallerySlider");
 
-            const sidebar = document.getElementById('sidebarNav');
-            const overlay = document.getElementById('sidebarOverlay');
-            const menuBtn = document.getElementById('mobileMenuBtn');
-            const isOpen = sidebar.classList.contains('mobile-open');
 
-            if (isOpen) {
-                closeMobileSidebar();
-            } else {
-                sidebar.classList.add('mobile-open');
-                overlay.classList.add('active');
+const totalSlides =
+    document.querySelectorAll(".slide").length;
 
-                if (menuBtn) {
-                    menuBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
-                    menuBtn.setAttribute('aria-label', 'Close menu');
-                }
 
-                document.body.style.overflow = 'hidden';
-            }
+function updateSlide(){
 
-        }
+    slider.style.transform =
+        "translateX(-"+
+        (currentSlide*100)+
+        "%)";
 
-        function closeMobileSidebar() {
+}
 
-            const sidebar = document.getElementById('sidebarNav');
-            const overlay = document.getElementById('sidebarOverlay');
-            const menuBtn = document.getElementById('mobileMenuBtn');
 
-            sidebar.classList.remove('mobile-open');
-            overlay.classList.remove('active');
+function nextSlide(){
 
-            if (menuBtn) {
-                menuBtn.innerHTML = '<i class="fa-solid fa-bars"></i>';
-                menuBtn.setAttribute('aria-label', 'Open menu');
-            }
+    currentSlide =
+        (currentSlide+1)%
+        totalSlides;
 
-            document.body.style.overflow = '';
+    updateSlide();
 
-        }
+}
 
-        // Close mobile sidebar when a navigation item is selected
-        document.querySelectorAll('.sidebar a, .submenu-item').forEach(item => {
-            item.addEventListener('click', () => {
-                if (window.innerWidth <= 850) {
-                    setTimeout(closeMobileSidebar, 150);
-                }
-            });
-        });
 
-        // Reset mobile menu state when switching back to desktop
-        window.addEventListener('resize', () => {
-            if (window.innerWidth > 850) {
-                closeMobileSidebar();
-            }
-        });
+function prevSlide(){
 
+    currentSlide =
+        (currentSlide-1+totalSlides)%
+        totalSlides;
 
-        /* DISMISS NOTICE */
-        function dismissNotice() {
-            document.getElementById('noticeTicker').style.display = 'none';
-        }
+    updateSlide();
 
+}
 
-        /* SEARCH */
-        function handleSearch() {
 
-            const input =
-                document.getElementById('searchInput');
+setInterval(nextSlide,4000);
 
-            const clearBtn =
-                document.getElementById('clearSearchBtn');
 
-            const query =
-                input.value.toLowerCase();
-
-            const strips =
-                document.querySelectorAll('.profile-strip');
-
-            clearBtn.style.display =
-                input.value ? 'block' : 'none';
-
-            strips.forEach(strip => {
-
-                const text =
-                    strip.innerText.toLowerCase();
-
-                strip.style.display =
-                    text.includes(query)
-                        ? 'flex'
-                        : 'none';
-
-            });
-
-        }
-
-
-        function clearSearch() {
-
-            document.getElementById('searchInput').value = '';
-
-            handleSearch();
-
-        }
-
-
-        /* CATEGORY FILTER */
-        function filterCategory(cat) {
-
-            const strips =
-                document.querySelectorAll('.profile-strip');
-
-            strips.forEach(strip => {
-
-                if (
-                    cat === 'all' ||
-                    strip.getAttribute('data-category') === cat
-                ) {
-                    strip.style.display = 'flex';
-                } else {
-                    strip.style.display = 'none';
-                }
-
-            });
-
-        }
-
-
-        /* CHART */
-        const ctx =
-            document.getElementById('batchChart').getContext('2d');
-
-        new Chart(ctx, {
-
-            type: 'doughnut',
-
-            data: {
-
-                labels: [
-                    'DCA',
-                    'BCA',
-                    'PGDCA',
-                    'Faculty'
-                ],
-
-                datasets: [{
-
-                    data: [4, 1, 1, 1],
-
-                    backgroundColor: [
-                        '#2563eb',
-                        '#8b5cf6',
-                        '#06b6d4',
-                        '#10b981'
-                    ],
-
-                    borderWidth: 0
-
-                }]
-
-            },
-
-            options: {
-
-                responsive: true,
-                maintainAspectRatio: false,
-
-                plugins: {
-
-                    legend: {
-
-                        position: 'bottom',
-
-                        labels: {
-                            color: '#94a3b8',
-                            font: {
-                                size: 10
-                            }
-                        }
-
-                    }
-
-                }
-
-            }
-
-        });
-
-
-        /* GALLERY */
-        const slider =
-            document.getElementById('gallerySlider');
-
-        const slides =
-            document.querySelectorAll('.slide-item');
-
-        const dotsContainer =
-            document.getElementById('galleryDots');
-
-        let currentIndex = 0;
-
-
-        slides.forEach((_, idx) => {
-
-            const dot =
-                document.createElement('div');
-
-            dot.classList.add('dot');
-
-            if (idx === 0) {
-                dot.classList.add('active');
-            }
-
-            dot.addEventListener(
-                'click',
-                () => goToSlide(idx)
-            );
-
-            dotsContainer.appendChild(dot);
-
-        });
-
-
-        const dots =
-            document.querySelectorAll('.dot');
-
-
-        function updateSlider() {
-
-            slider.style.transform =
-                `translateX(-${currentIndex * 100}%)`;
-
-            dots.forEach((dot, idx) => {
-
-                dot.classList.toggle(
-                    'active',
-                    idx === currentIndex
-                );
-
-            });
-
-        }
-
-
-        function nextSlide() {
-
-            currentIndex =
-                (currentIndex + 1) % slides.length;
-
-            updateSlider();
-
-        }
-
-
-        function prevSlide() {
-
-            currentIndex =
-                (currentIndex - 1 + slides.length)
-                % slides.length;
-
-            updateSlider();
-
-        }
-
-
-        function goToSlide(index) {
-
-            currentIndex = index;
-
-            updateSlider();
-
-        }
-
-
-        setInterval(nextSlide, 3500);
-
-
-        /* PROFILE MODAL + INSTAGRAM */
-
-        function openIDCard(
-            name,
-            role,
-            batch,
-            img,
-            id,
-            loc,
-            email,
-            proj,
-            insta
-        ) {
-
-            document.getElementById('modalName').innerText = name;
-
-            document.getElementById('modalRole').innerText = role;
-
-            document.getElementById('modalBatch').innerText = batch;
-
-            document.getElementById('modalAvatar').src = img;
-
-            document.getElementById('modalID').innerText = id;
-
-            document.getElementById('modalLoc').innerText = loc;
-
-            document.getElementById('modalProject').innerText = proj;
-
-
-            /* INSTAGRAM LINK SET */
-
-            const instaBtn =
-                document.getElementById('modalInsta');
-
-            instaBtn.href = insta;
-
-            instaBtn.target = '_blank';
-
-
-            document.getElementById('idCardModal').style.display =
-                'flex';
-
-
-            confetti({
-                particleCount: 30,
-                spread: 60,
-                origin: {
-                    x: 0.5,
-                    y: 0.5
-                }
-            });
-
-        }
-
-
-        function closeIDCard() {
-
-            document.getElementById('idCardModal').style.display =
-                'none';
-
-        }
-
-
-        /* LIGHTBOX */
-
-        function openLightbox(src) {
-
-            document.getElementById('lightbox').style.display =
-                'flex';
-
-            document.getElementById('lightboxImg').src =
-                src;
-
-        }
-
-
-        function closeLightbox() {
-
-            document.getElementById('lightbox').style.display =
-                'none';
-
-        }
-
-
-        /* WHATSAPP REGISTRATION */
-
-        function sendWhatsAppRegistration(e) {
-
-            e.preventDefault();
-
-            const name =
-                document.getElementById('regName').value;
-
-            const course =
-                document.getElementById('regCourse').value;
-
-            const loc =
-                document.getElementById('regLocation').value;
-
-
-            const text =
-                `Directory Registration Request:
-Name: ${name}
-Course: ${course}
-Location: ${loc}`;
-
-
-            const whatsappURL =
-                'https://api.whatsapp.com/send?phone=919098802426&text='
-                + encodeURIComponent(text);
-
-
-            window.open(
-                whatsappURL,
-                '_blank'
-            );
-
-        }
-
-
-        /* CONFETTI */
-
-        function triggerConfetti(e) {
-
-            confetti({
-
-                particleCount: 25,
-
-                spread: 50,
-
-                origin: {
-                    x: e.clientX / window.innerWidth,
-                    y: e.clientY / window.innerHeight
-                }
-
-            });
-
-        }
-
-    </script>
+</script>
 
 </body>
 </html>
